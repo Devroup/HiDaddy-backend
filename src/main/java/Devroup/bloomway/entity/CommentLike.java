@@ -3,17 +3,20 @@ package Devroup.bloomway.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import java.time.LocalDateTime;
+import Devroup.bloomway.service.community.CommunityService;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "community_comment")
+@Table(name = "comment_likes")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommunityComment {
+public class CommentLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,14 +26,8 @@ public class CommunityComment {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private CommunityPost post;
-
-    @Column(nullable = false)
-    private String content;
-
-    @Column(name = "like_count")
-    private Integer like;
+    @JoinColumn(name = "comment_id")
+    private CommunityComment comment;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -38,10 +35,5 @@ public class CommunityComment {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        like = 0;
-    }
-
-    public void setLike(Integer like) {
-        this.like = like;
     }
 } 
