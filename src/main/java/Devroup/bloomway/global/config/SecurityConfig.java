@@ -1,25 +1,45 @@
 package Devroup.bloomway.global.config;
 
+import Devroup.bloomway.jwt.JwtAuthenticationFilter;
+import Devroup.bloomway.jwt.JwtUtil;
+import Devroup.bloomway.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // ✅ CSRF 비활성화 (람다 방식)
+                .csrf(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/oauth2/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/login", "/oauth2/**", "/auth/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/login-success")
-                );
+                        .defaultSuccessUrl("/login-success", true)  // 무조건 "/login-success"로 이동하게 설정
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")                 // POST /logout 경로
+                        .logoutSuccessUrl("/")                // 로그아웃 후 리디렉션
+                        .invalidateHttpSession(true)
+                        .deleteCookies("accessToken", "refreshToken")
+                        .permitAll()
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
