@@ -20,7 +20,15 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	implementation 'com.mysql:mysql-connector-j'
 	
+	// Spring Security 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Spring Boot DevTools 의존성 추가
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
 	// JPA 의존성 추가 (jakarta persistence 사용)
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	

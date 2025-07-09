@@ -60,4 +60,12 @@ public class CommunityPost {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    public void setLikeCount(Integer likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
 } 
