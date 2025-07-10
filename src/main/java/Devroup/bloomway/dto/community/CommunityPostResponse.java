@@ -31,7 +31,7 @@ public class CommunityPostResponse {
                 .imageUrl(post.getImageUrl())
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
-                .authorName(post.getUser().getName())
+                .authorName(post.getUser() != null ? post.getUser().getName() : "Unknown")
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .isLiked(isLiked)
