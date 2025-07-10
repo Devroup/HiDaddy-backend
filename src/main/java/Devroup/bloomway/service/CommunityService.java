@@ -20,9 +20,8 @@ public class CommunityService {
 
     // 게시글 목록 조회
     public Page<CommunityPostResponse> getPosts(Pageable pageable, User currentUser) {
-        // 생성일 기준 내림차순으로 게시글 조회
-        // 페이징 처리 : Pageable 객체를 통해 페이지 번호, 크기, 정렬 정보를 받음
-        Page<CommunityPost> posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+        // 게시글 조회
+        Page<CommunityPost> posts = postRepository.findAll(pageable);
         // 각 게시글에 대해 현재 사용자의 좋아요 여부를 확인하여 매핑 처리
         return posts.map(post -> {
             boolean isLiked = postLikeRepository.existsByPostAndUser(post, currentUser);
@@ -55,8 +54,12 @@ public class CommunityService {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
-        if (!post.getUser().equals(currentUser)) {
-            throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
+        // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+        if (currentUser != null) {
+            // 게시글 작성자와 현재 사용자가 다른 경우
+            if (post.getUser() != null && !post.getUser().equals(currentUser)) {
+                throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
+            }
         }
 
         postRepository.delete(post);
@@ -78,11 +81,38 @@ public class CommunityService {
 
         // 데이터베이스에 저장
         CommunityComment savedComment = commentRepository.save(comment);
+        
+        // 게시글의 댓글 수 증가
+        post.setCommentCount(post.getCommentCount() + 1);
+        
         // 게시글에 댓글 추가
         post.getComments().add(savedComment);
+        
         // 저장된 댓글을 DTO로 변환해서 반환
-        // 여기서 false는 해당 댓글에 대한 좋아요 여부 -> 새로 생성된 댓글은 false로 초기화
         return CommentResponse.from(savedComment, false);
+    }
+
+    // 댓글 삭제
+    @Transactional
+    public void deleteComment(Long commentId, User currentUser) {
+        // 댓글 존재 여부 확인
+        CommunityComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+
+        // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+        if (currentUser != null) {
+            // 댓글 작성자와 현재 사용자가 다른 경우
+            if (comment.getUser() != null && !comment.getUser().equals(currentUser)) {
+                throw new IllegalArgumentException("댓글 삭제 권한이 없습니다.");
+            }
+        }
+
+        // 게시글의 댓글 수 감소
+        CommunityPost post = comment.getPost();
+        post.setCommentCount(post.getCommentCount() - 1);
+
+        // 댓글 삭제
+        commentRepository.delete(comment);
     }
 
     // 게시글 좋아요

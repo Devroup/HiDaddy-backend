@@ -14,18 +14,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(AbstractHttpConfigurer::disable)  // CSRF 보호 비활성화
+            .cors(AbstractHttpConfigurer::disable)  // CORS 비활성화
+            .formLogin(AbstractHttpConfigurer::disable)  // 폼 로그인 비활성화
+            .httpBasic(AbstractHttpConfigurer::disable)  // HTTP Basic 인증 비활성화
             .authorizeHttpRequests(auth -> auth
-                // Swagger UI 접근 허용
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/swagger-resources/**",
-                    "/v3/api-docs/**",
-                    "/api-docs/**"
-                ).permitAll()
-                // 기타 API 설정
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()  // 모든 요청 허용
             );
         
         return http.build();

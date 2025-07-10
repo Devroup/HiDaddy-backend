@@ -23,7 +23,7 @@ public class CommentResponse {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
-                .authorName(comment.getUser().getName())
+                .authorName(comment.getUser() != null ? comment.getUser().getName() : "Unknown")
                 .likeCount(comment.getLike())
                 .createdAt(comment.getCreatedAt())
                 .isLiked(isLiked)
