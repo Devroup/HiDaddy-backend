@@ -2,6 +2,7 @@ package Devroup.bloomway.jwt;
 
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.repository.UserRepository;
+import Devroup.bloomway.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,9 +28,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. 쿠키에서 accessToken 추출
+        // 공개 경로면 인증 없이 필터 통과
+        String path = request.getRequestURI();
+        if (isPublicPath(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = null;
-        if (request.getCookies() != null) {
+
+        // 1. Authorization 헤더에서 토큰 추출
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // 2. Authorization 헤더 없으면 쿠키에서 accessToken 추출
+        if (token == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("accessToken".equals(cookie.getName())) {
                     token = cookie.getValue();
@@ -38,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2. 토큰 존재 시 검증 및 유저 인증 처리
+        // 3. 토큰 존재 시 검증 및 유저 인증 처리
         if (token != null && jwtUtil.validateToken(token)) {
             Claims claims = jwtUtil.getClaims(token);
             String userIdStr = claims.getSubject();
@@ -46,14 +61,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
+                UserDetailsImpl userDetails = new UserDetailsImpl(user);
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(user, null, null);
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
-        // 3. 다음 필터로 넘김
+        // 4. 다음 필터로 넘김
         filterChain.doFilter(request, response);
+    }
+
+
+    private boolean isPublicPath(String path) {
+        return path.equals("/") ||
+                path.startsWith("/api/login") ||
+                path.startsWith("/auth") ||
+                path.startsWith("/oauth2") ||
+                path.startsWith("/css") ||
+                path.startsWith("/js") ||
+                path.startsWith("/h2-console") ||
+                path.startsWith("/swagger") ||
+                path.startsWith("/v3/api-docs"); // Swagger용
     }
 }

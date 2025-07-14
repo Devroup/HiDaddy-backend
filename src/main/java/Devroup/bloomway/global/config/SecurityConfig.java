@@ -1,5 +1,6 @@
 package Devroup.bloomway.global.config;
 
+import Devroup.bloomway.security.OAuth2AuthenticationSuccessHandler;
 import Devroup.bloomway.jwt.JwtAuthenticationFilter;
 import Devroup.bloomway.jwt.JwtUtil;
 import Devroup.bloomway.repository.UserRepository;
@@ -17,6 +18,7 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -24,16 +26,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/oauth2/**", "/auth/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/api/login", "/oauth2/**", "/auth/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/login-success", true)  // 무조건 "/login-success"로 이동하게 설정
+                        .defaultSuccessUrl("/api/login/login-success", true)
+                        .successHandler(oAuth2AuthenticationSuccessHandler)// 무조건 "/login-success"로 이동하게 설정
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout")                 // POST /logout 경로
-                        .logoutSuccessUrl("/")                // 로그아웃 후 리디렉션
+                        .logoutUrl("/api/login/logout")             // POST /api/logout 경로
+                        .logoutSuccessUrl("/api/login")             // 로그아웃 후 리디렉션
                         .invalidateHttpSession(true)
                         .deleteCookies("accessToken", "refreshToken")
                         .permitAll()

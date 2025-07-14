@@ -1,7 +1,10 @@
 package Devroup.bloomway.service;
 
+import Devroup.bloomway.dto.BabyRegisterRequestDto;
+import Devroup.bloomway.entity.Baby;
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.entity.RefreshToken;
+import Devroup.bloomway.repository.BabyRepository;
 import Devroup.bloomway.repository.UserRepository;
 import Devroup.bloomway.repository.RefreshTokenRepository;
 import Devroup.bloomway.jwt.JwtUtil;
@@ -17,6 +20,51 @@ import java.util.Map;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BabyRepository babyRepository;
+
+    public void registerBaby(BabyRegisterRequestDto dto, User user) {
+        // 1. 유저 이름 업데이트
+        user.setName(dto.getUserName());
+
+        // 2. dueDate 파싱
+        LocalDateTime dueDate = dto.getParsedDueDate();
+
+        // 3. 아기 생성
+        Baby baby = Baby.builder()
+                .name(dto.getBabyName())
+                .dueDate(dueDate)
+                .user(user)
+                .build();
+
+        babyRepository.save(baby);
+
+        // 4. 선택된 아기 ID 설정
+        user.setSelectedBabyId(baby.getId());
+        userRepository.save(user);
+    }
+
+    private LocalDateTime parseDueDate(String dueDateStr) {
+        try {
+            return LocalDateTime.parse(dueDateStr); // "yyyy-MM-ddTHH:mm" 형식 권장
+        } catch (Exception e) {
+            // fallback: "yyyy-MM-dd" 형식도 지원
+            return LocalDateTime.parse(dueDateStr + "T00:00");
+        }
+    }
+
+    public void changeSelectedBaby(User user, Long babyId) {
+        Baby baby = babyRepository.findById(babyId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
+
+        // 본인의 아기인지 확인
+        if (!baby.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("본인의 아기만 선택할 수 있습니다.");
+        }
+
+        user.setSelectedBabyId(babyId);
+        userRepository.save(user);
+    }
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
@@ -54,7 +102,6 @@ public class UserService {
         // 응답으로 전달할 토큰들
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
-        // tokens.put("refreshToken", refreshTokenStr); // 필요 시 제거 가능
         return tokens;
     }
 }
