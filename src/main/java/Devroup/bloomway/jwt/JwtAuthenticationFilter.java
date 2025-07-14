@@ -6,7 +6,6 @@ import Devroup.bloomway.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,17 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token = authHeader.substring(7);
         }
 
-        // 2. Authorization 헤더 없으면 쿠키에서 accessToken 추출
-        if (token == null && request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        // 3. 토큰 존재 시 검증 및 유저 인증 처리
+        // 2. 토큰 존재 시 검증 및 유저 인증 처리
         if (token != null && jwtUtil.validateToken(token)) {
             Claims claims = jwtUtil.getClaims(token);
             String userIdStr = claims.getSubject();
@@ -72,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 4. 다음 필터로 넘김
+        // 3. 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
 

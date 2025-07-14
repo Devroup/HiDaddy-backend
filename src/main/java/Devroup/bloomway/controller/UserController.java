@@ -1,6 +1,6 @@
 package Devroup.bloomway.controller;
 
-import Devroup.bloomway.entity.User;
+// import Devroup.bloomway.entity.User;
 import Devroup.bloomway.dto.BabyRegisterRequestDto;
 import Devroup.bloomway.security.UserDetailsImpl;
 import Devroup.bloomway.service.UserService;
@@ -16,6 +16,7 @@ public class UserController {
 
     private final UserService userService;
 
+    /*
     @GetMapping("/baby")
     public String babyRegisterPage(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
@@ -39,6 +40,7 @@ public class UserController {
         """;
         return html;
     }
+    */
 
     @PostMapping("/baby")
     public ResponseEntity<?> registerBaby(

@@ -44,9 +44,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         );
 
         String accessToken = tokens.get("accessToken");
+        String refreshToken = tokens.get("refreshToken");
 
         // 앱에서 처리할 수 있도록 딥링크로 리디렉션
-        String redirectUri = "myapp://login?accessToken=" + accessToken;
+        String redirectUri = "myapp://login"
+                + "?accessToken=" + accessToken
+                + "&refreshToken=" + refreshToken;
         response.sendRedirect(redirectUri);
     }
 }

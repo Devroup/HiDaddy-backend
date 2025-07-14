@@ -26,19 +26,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/oauth2/**", "/auth/**", "/css/**", "/js/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/login", "/oauth2/**", "/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/api/login/login-success", true)
-                        .successHandler(oAuth2AuthenticationSuccessHandler)// 무조건 "/login-success"로 이동하게 설정
+                        // 웹 테스트용 .defaultSuccessUrl("/api/login/login-success", true)
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/api/login/logout")             // POST /api/logout 경로
+                        // 웹 테스트용 .logoutUrl("/api/login/logout")             // POST /api/logout 경로
                         .logoutSuccessUrl("/api/login")             // 로그아웃 후 리디렉션
                         .invalidateHttpSession(true)
-                        .deleteCookies("accessToken", "refreshToken")
                         .permitAll()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository),

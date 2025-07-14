@@ -43,15 +43,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private LocalDateTime parseDueDate(String dueDateStr) {
-        try {
-            return LocalDateTime.parse(dueDateStr); // "yyyy-MM-ddTHH:mm" 형식 권장
-        } catch (Exception e) {
-            // fallback: "yyyy-MM-dd" 형식도 지원
-            return LocalDateTime.parse(dueDateStr + "T00:00");
-        }
-    }
-
     public void changeSelectedBaby(User user, Long babyId) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
@@ -102,6 +93,7 @@ public class UserService {
         // 응답으로 전달할 토큰들
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshTokenStr);
         return tokens;
     }
 }

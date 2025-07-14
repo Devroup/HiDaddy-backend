@@ -12,8 +12,8 @@ import java.util.Date;
 public class JwtUtil {
 
     private final String secretKey = "hidaddy-super-secure-jwt-secret-key-2025";
-    private final long accessExpirationMs = 1000L * 60 * 60 * 1;   // 1시간
-    private final long refreshExpirationMs = 1000L * 60 * 60 * 24 * 14; // 14일
+    private final long accessExpirationMs = 1000L * 60 * 60 * 24;   // 24시간
+    private final long refreshExpirationMs = 1000L * 60 * 60 * 24 * 365; // 1년
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());

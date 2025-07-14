@@ -1,17 +1,17 @@
 package Devroup.bloomway.controller;
 
 import Devroup.bloomway.dto.LogoutRequestDto;
-import Devroup.bloomway.entity.User;
+// import Devroup.bloomway.entity.User;
 import Devroup.bloomway.repository.RefreshTokenRepository;
-import Devroup.bloomway.security.UserDetailsImpl;
+// import Devroup.bloomway.security.UserDetailsImpl;
 import Devroup.bloomway.service.UserService;
 import Devroup.bloomway.util.OAuthUserInfoExtractor;
-import io.swagger.v3.oas.annotations.Operation;
+// import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+// import org.springframework.security.core.annotation.AuthenticationPrincipal;
+// import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+// import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -25,6 +25,7 @@ public class LoginController {
     private final OAuthUserInfoExtractor oauthUserInfoExtractor;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    /*
     @GetMapping("")
     public String index(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         StringBuilder html = new StringBuilder();
@@ -72,12 +73,18 @@ public class LoginController {
                 userInfo.get("email"),
                 null,
                 null,
-                userInfo.get("loginType"),
+                loginType,
                 userInfo.get("socialId")
         );
 
-        return ResponseEntity.ok(tokens);
+        return ResponseEntity.ok(Map.of(
+                "accessToken", tokens.get("accessToken"),
+                "refreshToken", tokens.get("refreshToken"),
+                "message", "로그인 성공"
+        ));
     }
+     */
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody LogoutRequestDto logoutDto) {
