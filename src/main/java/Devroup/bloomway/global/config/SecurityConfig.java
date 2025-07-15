@@ -4,6 +4,7 @@ import Devroup.bloomway.security.OAuth2AuthenticationSuccessHandler;
 import Devroup.bloomway.jwt.JwtAuthenticationFilter;
 import Devroup.bloomway.jwt.JwtUtil;
 import Devroup.bloomway.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,24 +26,38 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
+                // API 인증 정책
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/oauth2/**", "/auth/**").permitAll()
+                        .requestMatchers(
+                                "/api/login",
+                                "/oauth2/**",
+                                "/auth/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                // 비인증 요청 시 401 JSON 반환
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"message\": \"인증이 필요합니다.\"}");
+                        })
+                )
+
+                // 소셜 로그인 성공 시 딥링크 리디렉션 핸들러 사용
                 .oauth2Login(oauth -> oauth
-                        // 웹 테스트용 .defaultSuccessUrl("/api/login/login-success", true)
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                                .successHandler(oAuth2AuthenticationSuccessHandler)
+                        // .defaultSuccessUrl("/api/login/login-success", true) // 웹 테스트용 제거
                 )
-                .logout(logout -> logout
-                        // 웹 테스트용 .logoutUrl("/api/login/logout")             // POST /api/logout 경로
-                        .logoutSuccessUrl("/api/login")             // 로그아웃 후 리디렉션
-                        .invalidateHttpSession(true)
-                        .permitAll()
-                )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository),
-                        UsernamePasswordAuthenticationFilter.class);
+
+                // JWT 필터 등록
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtUtil, userRepository),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
 }
-
