@@ -35,8 +35,24 @@ public class EmotionDiary {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
-} 
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public void update(String content, String imageUrl)
+    {
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.updatedAt = LocalDateTime.now();
+    }
+}
