@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@XSlf4j
 @RestController
 @RequestMapping("/emotion-diaries")
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class EmotionDiaryController {
     public ResponseEntity<List<EmotionDiaryResponse>> readEmotionDiary(
             // 범위 지정하여 범위 내의 감정일기 조회
             @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate start,
-            @RequestParam("start") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate end,
+            @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate end,
             @AuthenticationPrincipal User currentUser
     ) {
         List<EmotionDiaryResponse> responses = emotionDiaryService.readEmotionDiary(currentUser, start, end);
@@ -50,7 +49,7 @@ public class EmotionDiaryController {
     @GetMapping("/{date}")
     public ResponseEntity<EmotionDiaryResponse> readEmotionDiaryByDate(
             // 특정 날짜로 감정일기에 접근 후 조회
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate date,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @AuthenticationPrincipal User currentUser
     ) {
         EmotionDiaryResponse response = emotionDiaryService.readEmotionDiaryByDate(currentUser, date);
@@ -64,7 +63,7 @@ public class EmotionDiaryController {
             @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestBody EmotionDiaryUpdateRequest request
     ) {
-        EmotionDiaryResponse response = emotionDiaryService.UpdateEmotionDiary(currentUser, date, request);
+        EmotionDiaryResponse response = emotionDiaryService.updateEmotionDiary(currentUser, date, request);
         return ResponseEntity.ok(response);
     }
 

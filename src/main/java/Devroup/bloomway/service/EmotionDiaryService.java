@@ -61,7 +61,7 @@ public class EmotionDiaryService {
 
     // 감정일기 수정 (update)
 
-    public EmotionDiaryResponse UpdateEmotionDiary(
+    public EmotionDiaryResponse updateEmotionDiary(
             User currentUser,
             LocalDate date,
             EmotionDiaryUpdateRequest dto
