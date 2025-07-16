@@ -1,7 +1,9 @@
 package Devroup.bloomway.global.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -10,22 +12,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    private static final String SECURITY_SCHEME_NAME = "bearerAuth";
-
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI openAPI() {
+        Info info = new Info()
+                .title("HiDaddy API Documentation")
+                .version("v1.0.0")
+                .description("HiDaddy 백엔드 API 문서입니다.")
+                .license(new License().name("Apache 2.0").url("http://springdoc.org"));
+
+        SecurityScheme securityScheme = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .in(SecurityScheme.In.HEADER)
+                .name("Authorization");
+
         return new OpenAPI()
-                .info(new Info()
-                        .title("Bloomway API")
-                        .version("v1")
-                        .description("Bloomway 서비스용 API 문서"))
-                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
-                .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes(SECURITY_SCHEME_NAME,
-                                new SecurityScheme()
-                                        .name(SECURITY_SCHEME_NAME)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                .components(new Components().addSecuritySchemes("bearerAuth", securityScheme))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .info(info);
     }
 }

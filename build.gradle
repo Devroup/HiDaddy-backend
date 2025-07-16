@@ -18,41 +18,40 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	
-	// JPA 의존성 추가 (jakarta persistence 사용)
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	
-	// Lombok 의존성 추가
+	implementation 'com.mysql:mysql-connector-j'
+
+	// Swagger OpenAPI
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-common:2.1.0'
+
+	// Spring Security 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// 개발 도구
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
-	
-	// H2 데이터베이스 추가 (개발 환경용)
-	runtimeOnly 'com.h2database:h2'
-	
+
+	// 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	// oauth2 의존성
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-
-	// MySQL 의존성
-	implementation 'mysql:mysql-connector-java:8.0.33'
 
 	// JWT 의존성
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	// swagger 의존성
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	// oauth2 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 }
 
 tasks.named('test') {

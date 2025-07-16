@@ -9,12 +9,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -27,9 +29,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 공개 경로면 인증 없이 필터 통과
         String path = request.getRequestURI();
+        log.info("🔍 Incoming request: {}", path);
+
+        // 공개 경로면 인증 없이 필터 통과
         if (isPublicPath(path)) {
+            log.info("✅ Public path, skipping authentication: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -40,23 +45,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+            log.info("🪪 Extracted token from header.");
+        } else {
+            log.warn("⛔ Authorization header missing or malformed.");
         }
 
         // 2. 토큰 존재 시 검증 및 유저 인증 처리
         if (token != null && jwtUtil.validateToken(token)) {
-            Claims claims = jwtUtil.getClaims(token);
-            String userIdStr = claims.getSubject();
-            Long userId = Long.parseLong(userIdStr);
+            try {
+                Claims claims = jwtUtil.getClaims(token);
+                String userIdStr = claims.getSubject();
+                Long userId = Long.parseLong(userIdStr);
+                log.info("🔐 Token is valid. User ID: {}", userId);
 
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null) {
-                UserDetailsImpl userDetails = new UserDetailsImpl(user);
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    UserDetailsImpl userDetails = new UserDetailsImpl(user);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.info("✅ Authentication set for user: {}", user.getEmail());
+                } else {
+                    log.warn("❌ User not found for ID: {}", userId);
+                }
+            } catch (Exception e) {
+                log.error("❗ Error during token parsing or authentication", e);
             }
         } else {
+            log.warn("❌ Invalid or missing token.");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
@@ -64,7 +81,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 3. 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
-
 
     private boolean isPublicPath(String path) {
         return path.equals("/") ||
@@ -75,6 +91,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/js") ||
                 path.startsWith("/h2-console") ||
                 path.startsWith("/swagger") ||
-                path.startsWith("/v3/api-docs"); // Swagger용
+                path.startsWith("/v3/api-docs");
     }
 }
