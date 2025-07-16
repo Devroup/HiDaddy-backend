@@ -78,7 +78,7 @@ public class UserService {
         // Access + Refresh Token 생성
         String accessToken = jwtUtil.createAccessToken(user);
         String refreshTokenStr = jwtUtil.createRefreshToken();
-        LocalDateTime expiredAt = LocalDateTime.now().plusDays(14);
+        LocalDateTime expiredAt = LocalDateTime.now().plusDays(365);
 
         // RefreshToken DB에 저장 (기존 존재 여부에 따라 분기)
         RefreshToken existing = refreshTokenRepository.findByUser(user).orElse(null);
