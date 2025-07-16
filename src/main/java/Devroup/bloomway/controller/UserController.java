@@ -65,4 +65,10 @@ public class UserController {
         userService.changeSelectedBaby(userDetails.getUser(), babyId);
         return ResponseEntity.ok("선택된 아기 변경 완료");
     }
+
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<String> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        userService.deleteUser(userDetails.getUser());
+        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+    }
 }

@@ -8,6 +8,7 @@ import Devroup.bloomway.repository.BabyRepository;
 import Devroup.bloomway.repository.UserRepository;
 import Devroup.bloomway.repository.RefreshTokenRepository;
 import Devroup.bloomway.jwt.JwtUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -95,5 +96,17 @@ public class UserService {
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshTokenStr);
         return tokens;
+    }
+
+    @Transactional
+    public void deleteUser(User user) {
+        // RefreshToken 먼저 삭제
+        refreshTokenRepository.deleteByUser(user);
+
+        // 아기 정보 삭제 (Cascade 걸려 있지 않다면 명시적 삭제 필요)
+        babyRepository.deleteAllByUser(user);
+
+        // 사용자 삭제
+        userRepository.delete(user);
     }
 }

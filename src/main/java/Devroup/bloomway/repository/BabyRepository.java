@@ -10,4 +10,6 @@ public interface BabyRepository extends JpaRepository<Baby, Long> {
 
     // 특정 유저의 모든 아기 목록 조회
     List<Baby> findByUser(User user);
+
+    void deleteAllByUser(User user);
 }
