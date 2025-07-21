@@ -18,8 +18,8 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Maven
-      run: mvn clean package -DskipTests
+    - name: Build with Gradle
+      run: ./gradlew build -x test
 
     - name: Upload JAR to EC2
       uses: appleboy/scp-action@v0.1.6
