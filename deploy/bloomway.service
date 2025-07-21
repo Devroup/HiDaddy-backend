@@ -1,0 +1,16 @@
+[Unit]
+Description=HiDaddy Spring Boot Application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/usr/bin/java -jar /home/ubuntu/bloomway-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+StandardOutput=append:/home/ubuntu/app.log
+StandardError=append:/home/ubuntu/app.log
+
+[Install]
+WantedBy=multi-user.target
