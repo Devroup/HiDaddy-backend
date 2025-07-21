@@ -21,6 +21,9 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build -x test
 
+    - name: 확인- JAR 파일 출력
+      run: ls -al build/libs
+
     - name: Upload JAR to EC2
       uses: appleboy/scp-action@v0.1.6
       with:
@@ -40,3 +43,5 @@ jobs:
           pkill -f 'bloomway-0.0.1-SNAPSHOT.jar' || true
           mkdir -p /home/ubuntu/app
           setsid java -jar /home/ubuntu/bloomway-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod > /home/ubuntu/app/app.log 2>&1 &
+          nohup java -jar /home/ubuntu/build/libs/bloomway-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod > /home/ubuntu/app.log 2>&1 & disown
+          sleep 3
