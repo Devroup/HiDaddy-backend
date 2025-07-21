@@ -40,7 +40,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          sudo mv /home/ubuntu/bloomway.service /etc/systemd/system/bloomway.service
+          sudo mv /home/ubuntu/deploy/bloomway.service /etc/systemd/system/bloomway.service
           sudo systemctl daemon-reload
           sudo systemctl enable bloomway
           sudo systemctl restart bloomway
