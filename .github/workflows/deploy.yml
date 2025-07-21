@@ -32,7 +32,7 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         source: |
           build/libs/*.jar
-          ./deploy/hidady.service
+          deploy/hidady.service
         target: /home/ubuntu
 
     - name: Deploy on EC2 (서비스 등록 및 재시작)
