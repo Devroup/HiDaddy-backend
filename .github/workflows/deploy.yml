@@ -30,7 +30,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
-        source: "build/libs/*.jar,deploy/hidaddy.service"
+        source: "build/libs/*.jar,deploy/bloomway.service"
         target: /home/ubuntu
 
     - name: Deploy on EC2 (서비스 등록 및 재시작)
@@ -40,8 +40,9 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          sudo mv /home/ubuntu/hidaddy.service /etc/systemd/system/hidaddy.service
+          sudo mv /home/ubuntu/bloomway.service /etc/systemd/system/bloomway.service
           sudo systemctl daemon-reload
-          sudo systemctl enable hidaddy
-          sudo systemctl restart hidaddy
-          sudo systemctl status hidaddy --no-pager
+          sudo systemctl enable bloomway
+          sudo systemctl restart bloomway
+          sudo systemctl status bloomway --no-pager
+
