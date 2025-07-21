@@ -22,7 +22,7 @@ public class CommunityController {
     public ResponseEntity<Page<CommunityPostResponse>> getPosts(
             // 한 페이지당 20개의 게시글을 가져오도록 기본값 설정, 생성일 기준 내림차순 정렬
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-            // 현재 로그인한 사용자의 정보를 자동으로 주입입
+            // 현재 로그인한 사용자의 정보를 자동으로 주입
             // @AuthenticationPrincipal User currentUser
     ) {
         // 페이징 처리된 게시글 목록과 각 게시글에 대한 사용자의 좋아요 여부
