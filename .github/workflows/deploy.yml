@@ -3,10 +3,10 @@ name: Java CI/CD
 on: 
   push:
     branches: [ main ]
-
+# 테스트트
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
 
     steps:
     - name: Checkout source code
@@ -30,9 +30,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
-        source: |
-          build/libs/*.jar
-          deploy/hidady.service
+        source: "build/libs/*.jar,deploy/hidady.service"
         target: /home/ubuntu
 
     - name: Deploy on EC2 (서비스 등록 및 재시작)
