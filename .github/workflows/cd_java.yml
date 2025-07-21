@@ -1,4 +1,4 @@
-name: Java CI/CD
+name: Java CD
 
 on: 
   push:
@@ -45,4 +45,3 @@ jobs:
           sudo systemctl enable bloomway
           sudo systemctl restart bloomway
           sudo systemctl status bloomway --no-pager
-
