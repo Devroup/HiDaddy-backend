@@ -31,8 +31,8 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         source: |
-          build/libs/*.jar
-          deploy/hidady.service
+          ./build/libs/*.jar
+          ./deploy/hidady.service
         target: /home/ubuntu/app
 
     - name: Deploy on EC2 
