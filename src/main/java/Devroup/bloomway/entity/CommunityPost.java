@@ -68,4 +68,4 @@ public class CommunityPost {
     public void setCommentCount(Integer commentCount) {
         this.commentCount = commentCount;
     }
-} 
+}

@@ -44,4 +44,4 @@ public class CommunityComment {
     public void setLike(Integer like) {
         this.like = like;
     }
-} 
+}

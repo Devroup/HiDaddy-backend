@@ -1,9 +1,6 @@
 package Devroup.bloomway.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,6 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -23,7 +21,7 @@ public class User {
     @Column(name = "selected_baby_id")
     private Long selectedBabyId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String name;
 
     @Column(nullable = false)
@@ -83,4 +81,14 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-} 
+
+    public User(String name, String email, String phone, String partnerPhone,
+                String loginType, String socialId) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.partnerPhone = partnerPhone;
+        this.loginType = loginType;
+        this.socialId = socialId;
+    }
+}
