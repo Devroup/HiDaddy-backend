@@ -2,7 +2,7 @@ name: Java CD (Gradle + Spring Boot)
 
 on:
   push:
-    branches: [ main ]  # main 브랜치에 push 시 자동 실행
+    branches: [ main ] 
 
 jobs:
   build-and-deploy:
