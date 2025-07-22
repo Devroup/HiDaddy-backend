@@ -1,0 +1,56 @@
+name: Java CD (Gradle + Spring Boot)
+
+on:
+  push:
+    branches: [ main ]  # main 브랜치에 push 시 자동 실행
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Create application-prod.yml from secrets
+      run: |
+        mkdir -p src/main/resources
+        echo "${{ secrets.APPLICATION_PROD_YML }}" > src/main/resources/application-prod.yml
+
+    - name: Grant execute permission to Gradle
+      run: chmod +x ./gradlew
+
+    - name: Build JAR with Gradle (exclude test)
+      run: ./gradlew clean bootJar -x test
+
+    - name: Confirm built JAR
+      run: ls -al build/libs
+
+    - name: Upload JAR and Service File to EC2
+      uses: appleboy/scp-action@v0.1.6
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        source: "build/libs/*.jar, deploy/bloomway.service"
+        target: /home/ubuntu
+        strip_components: 2
+
+    - name: Deploy on EC2 (서비스 재시작)
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          sudo mv /home/ubuntu/deploy/bloomway.service /etc/systemd/system/bloomway.service
+          sudo systemctl daemon-reload
+          sudo systemctl enable bloomway
+          sudo systemctl restart bloomway
+          sudo systemctl status bloomway --no-pager
