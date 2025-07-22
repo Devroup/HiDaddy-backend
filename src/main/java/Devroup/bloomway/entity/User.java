@@ -83,4 +83,13 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setSelectedBabyId(Long selectedBabyId) {
+        this.selectedBabyId = selectedBabyId;
+    }
+
 } 
