@@ -40,7 +40,6 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         source: "build/libs/*.jar, deploy/bloomway.service"
         target: /home/ubuntu
-        strip_components: 2
 
     - name: Deploy on EC2 (서비스 재시작)
       uses: appleboy/ssh-action@v1.0.3
