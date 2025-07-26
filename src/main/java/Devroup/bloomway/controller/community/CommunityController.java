@@ -40,6 +40,19 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.createPost(request, null));
     }
 
+    @PutMapping("/{postId}")
+    public ResponseEntity<CommunityPostResponse> updatePost(
+            // 수정할 게시글 ID
+            @PathVariable Long postId,
+            // 수정할 내용이 담긴 요청 데이터
+            @RequestBody CommunityPostRequest request
+            // 작성자 본인만 수정 가능하도록 서비스 계층에서 검증 예정
+            // @AuthenticationPrincipal User currentUser
+    ) {
+        // return ResponseEntity.ok(communityService.updatePost(postId, request, currentUser));
+        return ResponseEntity.ok(communityService.updatePost(postId, request, null));
+    }
+
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
             // 삭제할 게시글 ID
@@ -52,6 +65,19 @@ public class CommunityController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<Page<CommentResponse>> getComments(
+            @PathVariable Long postId,
+            // 한 페이지당 10개의 댓글을 가져오도록 기본값 설정, 생성일 기준 오름차순 정렬
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable
+            // 현재 로그인한 사용자의 정보를 자동으로 주입
+            // @AuthenticationPrincipal User currentUser
+    ) {
+        // 특정 게시글의 페이징 처리된 댓글 목록과 각 댓글에 대한 사용자의 좋아요 여부
+        // return ResponseEntity.ok(communityService.getComments(postId, pageable, currentUser));
+        return ResponseEntity.ok(communityService.getComments(postId, pageable, null));
+    }
+
     @PostMapping("/{postId}/comments")
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable Long postId,
@@ -62,6 +88,21 @@ public class CommunityController {
         // return ResponseEntity.ok(communityService.createComment(postId, request, currentUser));
         return ResponseEntity.ok(communityService.createComment(postId, request, null));
     }
+
+    @PutMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<CommentResponse> updateComment(
+            @PathVariable Long postId,
+            // 수정할 댓글 ID
+            @PathVariable Long commentId,
+            // 수정할 댓글 내용
+            @RequestBody CommentRequest request
+            // 댓글 작성자 본인만 수정 가능하도록 서비스 계층에서 검증 예정
+            // @AuthenticationPrincipal User currentUser
+    ) {
+        // return ResponseEntity.ok(communityService.updateComment(commentId, request, currentUser));
+        return ResponseEntity.ok(communityService.updateComment(commentId, request, null));
+    }
+
 
     @DeleteMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
