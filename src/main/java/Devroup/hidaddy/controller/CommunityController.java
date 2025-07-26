@@ -28,51 +28,40 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (0부터 시작)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기")
-            @RequestParam(defaultValue = "20") int size
-            // 현재 로그인한 사용자의 정보를 자동으로 주입
-            // @AuthenticationPrincipal User currentUser
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal User currentUser
     ) {
         // 페이징 처리된 게시글 목록과 각 게시글에 대한 사용자의 좋아요 여부
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        // return ResponseEntity.ok(communityService.getPosts(pageable, currentUser));
-        return ResponseEntity.ok(communityService.getPosts(pageable, null));
+        return ResponseEntity.ok(communityService.getPosts(pageable, currentUser));
     }
 
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
     @PostMapping
     public ResponseEntity<CommunityPostResponse> createPost(
-            // JSON 형식으로 전달된 데이터를 자동으로 매핑
-            @RequestBody CommunityPostRequest request
-            // @AuthenticationPrincipal User currentUser    
+            @RequestBody CommunityPostRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // return ResponseEntity.ok(communityService.createPost(request, currentUser));
-        return ResponseEntity.ok(communityService.createPost(request, null));
+        return ResponseEntity.ok(communityService.createPost(request, currentUser));
     }
 
     @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
     @PutMapping("/{postId}")
     public ResponseEntity<CommunityPostResponse> updatePost(
-            // 수정할 게시글 ID
             @PathVariable Long postId,
-            // 수정할 내용이 담긴 요청 데이터
-            @RequestBody CommunityPostRequest request
-            // 작성자 본인만 수정 가능하도록 서비스 계층에서 검증 예정
-            // @AuthenticationPrincipal User currentUser
+            @RequestBody CommunityPostRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // return ResponseEntity.ok(communityService.updatePost(postId, request, currentUser));
-        return ResponseEntity.ok(communityService.updatePost(postId, request, null));
+        return ResponseEntity.ok(communityService.updatePost(postId, request, currentUser));
     }
 
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
-            // 삭제할 게시글 ID
-            @PathVariable Long postId
-            // 작성자 본인만 삭제 가능하도록 서비스 계층에서 검증 예정
-            // @AuthenticationPrincipal User currentUser
+            @PathVariable Long postId,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // communityService.deletePost(postId, currentUser);
-        communityService.deletePost(postId, null);
+        communityService.deletePost(postId, currentUser);
         return ResponseEntity.ok().build();
     }
 
@@ -83,26 +72,22 @@ public class CommunityController {
             @Parameter(description = "페이지 번호 (0부터 시작)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기")
-            @RequestParam(defaultValue = "10") int size
-            // 현재 로그인한 사용자의 정보를 자동으로 주입
-            // @AuthenticationPrincipal User currentUser
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User currentUser
     ) {
         // 특정 게시글의 페이징 처리된 댓글 목록과 각 댓글에 대한 사용자의 좋아요 여부
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
-        // return ResponseEntity.ok(communityService.getComments(postId, pageable, currentUser));
-        return ResponseEntity.ok(communityService.getComments(postId, pageable, null));
+        return ResponseEntity.ok(communityService.getComments(postId, pageable, currentUser));
     }
 
     @Operation(summary = "댓글 작성", description = "특정 게시글에 댓글을 작성합니다.")
     @PostMapping("/{postId}/comments")
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable Long postId,
-            @RequestBody CommentRequest request
-            // 댓글 작성자는 현재 로그인한 사용자로 자동 지정
-            // @AuthenticationPrincipal User currentUser
+            @RequestBody CommentRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // return ResponseEntity.ok(communityService.createComment(postId, request, currentUser));
-        return ResponseEntity.ok(communityService.createComment(postId, request, null));
+        return ResponseEntity.ok(communityService.createComment(postId, request, currentUser));
     }
 
     @Operation(summary = "댓글 수정", description = "기존 댓글을 수정합니다.")
@@ -112,22 +97,20 @@ public class CommunityController {
             // 수정할 댓글 ID
             @PathVariable Long commentId,
             // 수정할 댓글 내용
-            @RequestBody CommentRequest request
-            // 댓글 작성자 본인만 수정 가능하도록 서비스 계층에서 검증 예정
-            // @AuthenticationPrincipal User currentUser
+            @RequestBody CommentRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // return ResponseEntity.ok(communityService.updateComment(commentId, request, currentUser));
-        return ResponseEntity.ok(communityService.updateComment(commentId, request, null));
+        return ResponseEntity.ok(communityService.updateComment(commentId, request, currentUser));
     }
 
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제합니다.")
     @DeleteMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long postId,
-            @PathVariable Long commentId
-            // @AuthenticationPrincipal User currentUser
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal User currentUser
     ) {
-        communityService.deleteComment(commentId, null);
+        communityService.deleteComment(commentId, currentUser);
         return ResponseEntity.ok().build();
     }
 
@@ -135,11 +118,10 @@ public class CommunityController {
     @PostMapping("/{postId}/like")
     // togglePostLike 메서드 -> 이미 좋아요한 경우 취소, 아닌 경우 좋아용
     public ResponseEntity<Void> togglePostLike(
-            @PathVariable Long postId
-            // @AuthenticationPrincipal User currentUser
+            @PathVariable Long postId,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // communityService.togglePostLike(postId, currentUser);
-        communityService.togglePostLike(postId, null);
+        communityService.togglePostLike(postId, currentUser);
         return ResponseEntity.ok().build();
     }
 
@@ -148,11 +130,10 @@ public class CommunityController {
     // toggleCommentLike 메서드 -> 이미 좋아요한 경우 취소, 아닌 경우 좋아용
     public ResponseEntity<Void> toggleCommentLike(
             @PathVariable Long postId,
-            @PathVariable Long commentId
-            // @AuthenticationPrincipal User currentUser
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal User currentUser
     ) {
-        // communityService.toggleCommentLike(commentId, currentUser);
-        communityService.toggleCommentLike(commentId, null);
+        communityService.toggleCommentLike(commentId, currentUser);
         return ResponseEntity.ok().build();
     }
 } 
