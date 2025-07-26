@@ -48,6 +48,34 @@ public class CommunityService {
         return CommunityPostResponse.from(savedPost, false);
     }
 
+    // 게시글 수정
+    @Transactional
+    public CommunityPostResponse updatePost(Long postId, CommunityPostRequest request, User currentUser) {
+        // 게시글 존재 여부 확인
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+        if (currentUser != null) {
+            // 게시글 작성자와 현재 사용자가 다른 경우
+            if (post.getUser() != null && !post.getUser().equals(currentUser)) {
+                throw new IllegalArgumentException("게시글 수정 권한이 없습니다.");
+            }
+        }
+
+        // 게시글 내용 수정
+        post.updateContent(request.getTitle(), request.getContent(), request.getImageUrl());
+
+        // 수정된 게시글 저장 (더티 체킹으로 자동 업데이트)
+        CommunityPost updatedPost = postRepository.save(post);
+        
+        // 현재 사용자의 좋아요 여부 확인
+        boolean isLiked = postLikeRepository.existsByPostAndUser(updatedPost, currentUser);
+        
+        // 수정된 게시글을 DTO로 변환해서 반환
+        return CommunityPostResponse.from(updatedPost, isLiked);
+    }
+
     // 게시글 삭제
     @Transactional
     public void deletePost(Long postId, User currentUser) {
@@ -63,6 +91,22 @@ public class CommunityService {
         }
 
         postRepository.delete(post);
+    }
+
+    // 특정 게시글의 댓글 목록 조회
+    public Page<CommentResponse> getComments(Long postId, Pageable pageable, User currentUser) {
+        // 게시글 존재 여부 확인
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        // 해당 게시글의 댓글들을 페이징하여 조회
+        Page<CommunityComment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post, pageable);
+        
+        // 각 댓글에 대해 현재 사용자의 좋아요 여부를 확인하여 매핑 처리
+        return comments.map(comment -> {
+            boolean isLiked = commentLikeRepository.existsByCommentAndUser(comment, currentUser);
+            return CommentResponse.from(comment, isLiked);
+        });
     }
 
     // 댓글 작성
@@ -90,6 +134,34 @@ public class CommunityService {
         
         // 저장된 댓글을 DTO로 변환해서 반환
         return CommentResponse.from(savedComment, false);
+    }
+
+    // 댓글 수정
+    @Transactional
+    public CommentResponse updateComment(Long commentId, CommentRequest request, User currentUser) {
+        // 댓글 존재 여부 확인
+        CommunityComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+
+        // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+        if (currentUser != null) {
+            // 댓글 작성자와 현재 사용자가 다른 경우
+            if (comment.getUser() != null && !comment.getUser().equals(currentUser)) {
+                throw new IllegalArgumentException("댓글 수정 권한이 없습니다.");
+            }
+        }
+
+        // 댓글 내용 수정
+        comment.updateContent(request.getContent());
+
+        // 수정된 댓글 저장 (더티 체킹으로 자동 업데이트)
+        CommunityComment updatedComment = commentRepository.save(comment);
+        
+        // 현재 사용자의 좋아요 여부 확인
+        boolean isLiked = commentLikeRepository.existsByCommentAndUser(updatedComment, currentUser);
+        
+        // 수정된 댓글을 DTO로 변환해서 반환
+        return CommentResponse.from(updatedComment, isLiked);
     }
 
     // 댓글 삭제
