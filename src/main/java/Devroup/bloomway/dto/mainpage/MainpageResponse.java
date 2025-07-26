@@ -33,5 +33,4 @@ public class MainpageResponse {
 
         return (diff > 0) ? "D-" + diff : "D+" + Math.abs(diff);
     }
-
 }

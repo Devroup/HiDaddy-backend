@@ -5,6 +5,7 @@ import Devroup.bloomway.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BabyRepository extends JpaRepository<Baby, Long> {
 
@@ -12,4 +13,6 @@ public interface BabyRepository extends JpaRepository<Baby, Long> {
     List<Baby> findByUser(User user);
 
     void deleteAllByUser(User user);
+
+    Optional<Baby> findByIdAndUserId(Long babyId, Long userId);
 }
