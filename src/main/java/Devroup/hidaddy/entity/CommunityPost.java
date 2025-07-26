@@ -25,9 +25,6 @@ public class CommunityPost {
     private User user;
 
     @Column(nullable = false)
-    private String title;
-
-    @Column(nullable = false)
     private String content;
 
     @Column(name = "image_url")
@@ -47,6 +44,9 @@ public class CommunityPost {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<CommunityComment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private List<PostLike> postLikes = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -69,8 +69,7 @@ public class CommunityPost {
         this.commentCount = commentCount;
     }
     // 게시글 내용 수정 메서드
-    public void updateContent(String title, String content, String imageUrl) {
-        this.title = title;
+    public void updateContent(String content, String imageUrl) {
         this.content = content;
         this.imageUrl = imageUrl;
     }

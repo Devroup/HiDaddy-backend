@@ -10,7 +10,6 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class CommunityPostRequest {
-    private String title;
     private String content;
     private String imageUrl;
 } 

@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "community_comment")
@@ -25,6 +27,9 @@ public class CommunityComment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private CommunityPost post;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL)
+    private List<CommentLike> commentLikes = new ArrayList<>();
 
     @Column(nullable = false)
     private String content;

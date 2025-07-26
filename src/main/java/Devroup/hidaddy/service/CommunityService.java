@@ -36,7 +36,6 @@ public class CommunityService {
         // 게시글 엔티티 생성
         CommunityPost post = CommunityPost.builder()
                 .user(currentUser)
-                .title(request.getTitle())
                 .content(request.getContent())
                 .imageUrl(request.getImageUrl())
                 .build();
@@ -64,7 +63,7 @@ public class CommunityService {
         }
 
         // 게시글 내용 수정
-        post.updateContent(request.getTitle(), request.getContent(), request.getImageUrl());
+        post.updateContent(request.getContent(), request.getImageUrl());
 
         // 수정된 게시글 저장 (더티 체킹으로 자동 업데이트)
         CommunityPost updatedPost = postRepository.save(post);

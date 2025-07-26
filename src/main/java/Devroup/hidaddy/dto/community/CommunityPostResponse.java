@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Builder
 public class CommunityPostResponse {
     private Long id;
-    private String title;
     private String content;
     private String imageUrl;
     private Integer likeCount;
@@ -26,7 +25,6 @@ public class CommunityPostResponse {
     public static CommunityPostResponse from(CommunityPost post, boolean isLiked) {
         return CommunityPostResponse.builder()
                 .id(post.getId())
-                .title(post.getTitle())
                 .content(post.getContent())
                 .imageUrl(post.getImageUrl())
                 .likeCount(post.getLikeCount())
