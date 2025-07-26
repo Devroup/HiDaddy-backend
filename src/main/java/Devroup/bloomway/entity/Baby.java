@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor // Lombok: 모든 필드를 파라미터로 받는 생성자를 자동 생성
 @Builder // Lombok: 빌더 패턴을 사용하여 객체를 생성할 수 있도록 지원   
 public class Baby {
-    @Id // 기본키 지정  
+    @Id // 기본키 지정
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 기본키 생성을 데이터베이스에 위임 (AUTO_INCREMENT)
     private Long id;
 
@@ -35,4 +35,8 @@ public class Baby {
     protected void onCreate() {
         createdAt = LocalDateTime.now(); // 생성 시간을 현재 시간으로 자동 설정
     }
-} 
+
+    private String profileImageUrl;
+
+    private String message;
+}

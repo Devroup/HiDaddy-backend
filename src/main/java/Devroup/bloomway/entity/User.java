@@ -81,7 +81,13 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
+    public void setSelectedBabyId(Long selectedBabyId) {
+        this.selectedBabyId = selectedBabyId;
+    }
     public User(String name, String email, String phone, String partnerPhone,
                 String loginType, String socialId) {
         this.name = name;
