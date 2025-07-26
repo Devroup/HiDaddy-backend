@@ -6,6 +6,7 @@ import Devroup.bloomway.entity.RefreshToken;
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.jwt.JwtUtil;
 import Devroup.bloomway.repository.user.*;
+import Devroup.bloomway.repository.auth.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

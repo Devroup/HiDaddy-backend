@@ -1,4 +1,4 @@
-package Devroup.bloomway.repository.user;
+package Devroup.bloomway.repository.auth;
 
 import Devroup.bloomway.entity.RefreshToken;
 import Devroup.bloomway.entity.User;
