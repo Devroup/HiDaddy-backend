@@ -68,11 +68,10 @@ public class CommunityPost {
     public void setCommentCount(Integer commentCount) {
         this.commentCount = commentCount;
     }
-
     // 게시글 내용 수정 메서드
     public void updateContent(String title, String content, String imageUrl) {
         this.title = title;
         this.content = content;
         this.imageUrl = imageUrl;
     }
-} 
+}
