@@ -144,9 +144,10 @@ public class CommunityController {
     }
 
     @Operation(summary = "댓글 좋아요 토글", description = "댓글의 좋아요를 추가하거나 취소합니다.")
-    @PostMapping("/comments/{commentId}/like")
+    @PostMapping("/{postId}/comments/{commentId}/like")
     // toggleCommentLike 메서드 -> 이미 좋아요한 경우 취소, 아닌 경우 좋아용
     public ResponseEntity<Void> toggleCommentLike(
+            @PathVariable Long postId,
             @PathVariable Long commentId
             // @AuthenticationPrincipal User currentUser
     ) {
