@@ -1,8 +1,8 @@
 package Devroup.bloomway.security;
 
 import Devroup.bloomway.entity.User;
-import Devroup.bloomway.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import Devroup.bloomway.repository.user.*;
+import lombok.RequiredArgsConstructor;  
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

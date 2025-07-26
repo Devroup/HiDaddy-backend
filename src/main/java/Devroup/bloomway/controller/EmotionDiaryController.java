@@ -1,8 +1,6 @@
-package Devroup.bloomway.controller;
+package Devroup.bloomway.controller.emotiondiary;
 
-import Devroup.bloomway.dto.emotiondiary.request.EmotionDiaryCreateRequest;
-import Devroup.bloomway.dto.emotiondiary.request.EmotionDiaryUpdateRequest;
-import Devroup.bloomway.dto.emotiondiary.response.EmotionDiaryResponse;
+import Devroup.bloomway.dto.emotiondiary.*;
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.service.EmotionDiaryService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/emotion-diaries")
+@RequestMapping("/api/emotion-diaries")
 @RequiredArgsConstructor
 public class EmotionDiaryController {
     private final EmotionDiaryService emotionDiaryService;

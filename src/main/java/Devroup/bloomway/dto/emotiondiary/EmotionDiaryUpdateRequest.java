@@ -1,4 +1,4 @@
-package Devroup.bloomway.dto.emotiondiary.request;
+package Devroup.bloomway.dto.emotiondiary;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

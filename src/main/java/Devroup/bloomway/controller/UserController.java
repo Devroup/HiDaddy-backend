@@ -1,7 +1,6 @@
 package Devroup.bloomway.controller;
 
-// import Devroup.bloomway.entity.User;
-import Devroup.bloomway.dto.BabyRegisterRequestDto;
+import Devroup.bloomway.dto.user.*;
 import Devroup.bloomway.security.UserDetailsImpl;
 import Devroup.bloomway.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +43,7 @@ public class UserController {
 
     @PostMapping("/baby")
     public ResponseEntity<?> registerBaby(
-            @RequestBody BabyRegisterRequestDto requestDto,
+            @RequestBody BabyRegisterRequest requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {

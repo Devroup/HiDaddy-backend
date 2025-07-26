@@ -3,7 +3,7 @@ package Devroup.bloomway.global.config;
 import Devroup.bloomway.security.OAuth2AuthenticationSuccessHandler;
 import Devroup.bloomway.jwt.JwtAuthenticationFilter;
 import Devroup.bloomway.jwt.JwtUtil;
-import Devroup.bloomway.repository.UserRepository;
+import Devroup.bloomway.repository.user.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

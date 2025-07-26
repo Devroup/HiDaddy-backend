@@ -1,4 +1,4 @@
-package Devroup.bloomway.repository;
+package Devroup.bloomway.repository.user;
 
 import Devroup.bloomway.entity.Baby;
 import Devroup.bloomway.entity.User;

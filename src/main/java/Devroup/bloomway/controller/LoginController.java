@@ -1,13 +1,10 @@
 package Devroup.bloomway.controller;
 
-import Devroup.bloomway.dto.LogoutRequestDto;
-// import Devroup.bloomway.entity.User;
-import Devroup.bloomway.repository.RefreshTokenRepository;
-// import Devroup.bloomway.security.UserDetailsImpl;
+import Devroup.bloomway.repository.user.*;
 import Devroup.bloomway.service.UserService;
 import Devroup.bloomway.util.OAuthUserInfoExtractor;
 // import io.swagger.v3.oas.annotations.Operation;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;  
 import org.springframework.http.ResponseEntity;
 // import org.springframework.security.core.annotation.AuthenticationPrincipal;
 // import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -68,7 +65,7 @@ public class LoginController {
         String loginType = authToken.getAuthorizedClientRegistrationId();
         Map<String, String> userInfo = oauthUserInfoExtractor.extract(oauthUser, loginType);
 
-        Map<String, String> tokens = userService.saveOrLoginUser(
+        Map<String, String> tokens = suserService.saveOrLoginUser(
                 null,
                 userInfo.get("email"),
                 null,
@@ -86,15 +83,5 @@ public class LoginController {
      */
 
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody LogoutRequestDto logoutDto) {
-        String refreshToken = logoutDto.getRefreshToken();
 
-        if (refreshToken != null) {
-            refreshTokenRepository.findByToken(refreshToken)
-                    .ifPresent(refreshTokenRepository::delete);
-        }
-
-        return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
-    }
 }

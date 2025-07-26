@@ -1,4 +1,4 @@
-package Devroup.bloomway.repository;
+package Devroup.bloomway.repository.emotiondiary;
 
 import Devroup.bloomway.entity.EmotionDiary;
 import Devroup.bloomway.entity.User;

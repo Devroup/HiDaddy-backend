@@ -1,4 +1,4 @@
-package Devroup.bloomway.dto;
+package Devroup.bloomway.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-public class BabyRegisterRequestDto {
+public class BabyRegisterRequest {
     private String userName;
     private String babyName;
     private String dueDate; // 예: "2025-12-25"

@@ -1,7 +1,7 @@
 package Devroup.bloomway.jwt;
 
 import Devroup.bloomway.entity.User;
-import Devroup.bloomway.repository.UserRepository;
+import Devroup.bloomway.repository.user.*;
 import Devroup.bloomway.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

@@ -1,12 +1,10 @@
 package Devroup.bloomway.service;
 
-import Devroup.bloomway.dto.BabyRegisterRequestDto;
+import Devroup.bloomway.dto.user.*;
 import Devroup.bloomway.entity.Baby;
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.entity.RefreshToken;
-import Devroup.bloomway.repository.BabyRepository;
-import Devroup.bloomway.repository.UserRepository;
-import Devroup.bloomway.repository.RefreshTokenRepository;
+import Devroup.bloomway.repository.user.*;
 import Devroup.bloomway.jwt.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
 
-    public void registerBaby(BabyRegisterRequestDto dto, User user) {
+        public void registerBaby(BabyRegisterRequest dto, User user) {
         // 1. 유저 이름 업데이트
         user.setName(dto.getUserName());
 

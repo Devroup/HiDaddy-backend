@@ -1,4 +1,4 @@
-package Devroup.bloomway.dto.emotiondiary.response;
+package Devroup.bloomway.dto.emotiondiary;
 
 import Devroup.bloomway.entity.EmotionDiary;
 import lombok.AllArgsConstructor;

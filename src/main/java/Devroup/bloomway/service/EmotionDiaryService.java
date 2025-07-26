@@ -1,11 +1,9 @@
 package Devroup.bloomway.service;
 
-import Devroup.bloomway.dto.emotiondiary.request.EmotionDiaryCreateRequest;
-import Devroup.bloomway.dto.emotiondiary.request.EmotionDiaryUpdateRequest;
-import Devroup.bloomway.dto.emotiondiary.response.EmotionDiaryResponse;
+import Devroup.bloomway.dto.emotiondiary.*;
 import Devroup.bloomway.entity.EmotionDiary;
 import Devroup.bloomway.entity.User;
-import Devroup.bloomway.repository.EmotionDiaryRepository;
+import Devroup.bloomway.repository.emotiondiary.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

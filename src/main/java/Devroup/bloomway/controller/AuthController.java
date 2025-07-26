@@ -1,10 +1,11 @@
 package Devroup.bloomway.controller;
 
-import Devroup.bloomway.dto.RefreshTokenRequestDto;
+import Devroup.bloomway.dto.user.*;
+import Devroup.bloomway.dto.auth.*;
 import Devroup.bloomway.entity.RefreshToken;
 import Devroup.bloomway.entity.User;
 import Devroup.bloomway.jwt.JwtUtil;
-import Devroup.bloomway.repository.RefreshTokenRepository;
+import Devroup.bloomway.repository.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshAccessToken(
-            @RequestBody RefreshTokenRequestDto requestDto
+            @RequestBody RefreshTokenRequest requestDto
     ) {
         String refreshToken = requestDto.getRefreshToken();
 
@@ -40,6 +41,18 @@ public class AuthController {
                 "accessToken", newAccessToken,
                 "message", "Access Token 재발급 완료"
         ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody LogoutRequest logoutDto) {
+        String refreshToken = logoutDto.getRefreshToken();
+
+        if (refreshToken != null) {
+            refreshTokenRepository.findByToken(refreshToken)
+                    .ifPresent(refreshTokenRepository::delete);
+        }
+
+        return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }
 }
 
