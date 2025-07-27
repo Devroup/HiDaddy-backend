@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import Devroup.hidaddy.util.S3Uploader;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +20,10 @@ public class CommunityService {
     private final CommunityCommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
-
+    private final S3Uploader s3Uploader;
+    @Value("${cloudfront.domain}")
+    private String cloudFrontDomain;
+    
     // 게시글 목록 조회
     public Page<CommunityPostResponse> getPosts(Pageable pageable, User currentUser) {
         // 게시글 조회
@@ -32,24 +38,25 @@ public class CommunityService {
     // 게시글 작성
     @Transactional 
     // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
-    public CommunityPostResponse createPost(CommunityPostRequest request, User currentUser) {
-        // 게시글 엔티티 생성
-        CommunityPost post = CommunityPost.builder()
-                .user(currentUser)
-                .content(request.getContent())
-                .imageUrl(request.getImageUrl())
-                .build();
+    public CommunityPostResponse createPost(String content, MultipartFile image, User user) {
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Uploader.upload(image, "community");
+            imageUrl = cloudFrontDomain + "/" + imageUrl;
+        }
 
-        // 데이터베이스에 저장
-        CommunityPost savedPost = postRepository.save(post);
-        // 저장된 게시글을 DTO로 변환해서 반환
-        // 여기서 false는 해당 게시글에 대한 좋아요 여부 -> 새로 생성된 게시글은 false로 초기화
-        return CommunityPostResponse.from(savedPost, false);
+        CommunityPost post = CommunityPost.builder()
+            .content(content)
+            .imageUrl(imageUrl)
+            .user(user)
+            .build();
+        postRepository.save(post);
+        return CommunityPostResponse.from(post, false); // 응답 DTO 생성
     }
 
     // 게시글 수정
     @Transactional
-    public CommunityPostResponse updatePost(Long postId, CommunityPostRequest request, User currentUser) {
+    public CommunityPostResponse updatePost(Long postId, String content, MultipartFile image, User currentUser) {
         // 게시글 존재 여부 확인
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -63,7 +70,19 @@ public class CommunityService {
         }
 
         // 게시글 내용 수정
-        post.updateContent(request.getContent(), request.getImageUrl());
+        post.setContent(content);
+
+        if (image != null && !image.isEmpty()) {
+            // 기존 이미지 삭제
+            if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+                String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
+                s3Uploader.delete(imageKey);
+            }
+            // 새 이미지 업로드
+            String imageUrl = s3Uploader.upload(image, "community");
+            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            post.setImageUrl(imageUrl);
+        }
 
         // 수정된 게시글 저장 (더티 체킹으로 자동 업데이트)
         CommunityPost updatedPost = postRepository.save(post);
@@ -88,7 +107,12 @@ public class CommunityService {
                 throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
             }
         }
-
+        // 기존 이미지 삭제
+        if(post.getImageUrl() != null && !post.getImageUrl().isEmpty()){
+            String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
+            s3Uploader.delete(imageKey);
+        }
+        // 게시글 삭제
         postRepository.delete(post);
     }
 
