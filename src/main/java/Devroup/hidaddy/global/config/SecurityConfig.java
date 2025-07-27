@@ -1,9 +1,8 @@
 package Devroup.hidaddy.global.config;
 
-import Devroup.hidaddy.security.OAuth2AuthenticationSuccessHandler;
 import Devroup.hidaddy.jwt.JwtAuthenticationFilter;
 import Devroup.hidaddy.jwt.JwtUtil;
-import Devroup.hidaddy.repository.user.*;
+import Devroup.hidaddy.repository.user.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +20,6 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,12 +43,6 @@ public class SecurityConfig {
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"message\": \"인증이 필요합니다.\"}");
                         })
-                )
-
-                // 소셜 로그인 성공 시 딥링크 리디렉션 핸들러 사용
-                .oauth2Login(oauth -> oauth
-                                .successHandler(oAuth2AuthenticationSuccessHandler)
-                        // .defaultSuccessUrl("/api/login/login-success", true) // 웹 테스트용 제거
                 )
 
                 // JWT 필터 등록
