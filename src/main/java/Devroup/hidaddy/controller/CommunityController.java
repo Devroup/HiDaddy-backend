@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/community")
@@ -37,22 +39,24 @@ public class CommunityController {
     }
 
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommunityPostResponse> createPost(
-            @RequestBody CommunityPostRequest request,
+            @RequestParam("content") String content,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(communityService.createPost(request, currentUser));
+        return ResponseEntity.ok(communityService.createPost(content, image, currentUser));
     }
 
     @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommunityPostResponse> updatePost(
             @PathVariable Long postId,
-            @RequestBody CommunityPostRequest request,
+            @RequestParam("content") String content,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(communityService.updatePost(postId, request, currentUser));
+        return ResponseEntity.ok(communityService.updatePost(postId, content, image, currentUser));
     }
 
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")

@@ -27,7 +27,7 @@ public class CommunityPost {
     @Column(nullable = false)
     private String content;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
     @Column(name = "like_count")
@@ -69,8 +69,11 @@ public class CommunityPost {
         this.commentCount = commentCount;
     }
     // 게시글 내용 수정 메서드
-    public void updateContent(String content, String imageUrl) {
+    public void setContent(String content) {
         this.content = content;
+    }
+
+    public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 }
