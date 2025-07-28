@@ -10,7 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(
+        name = "User",
+        description = "회원 정보, 아기 등록 및 선택 등 사용자 관련 API"
+)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
