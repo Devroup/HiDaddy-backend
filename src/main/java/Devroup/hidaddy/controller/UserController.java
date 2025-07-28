@@ -3,6 +3,9 @@ package Devroup.hidaddy.controller;
 import Devroup.hidaddy.dto.user.*;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,6 +44,12 @@ public class UserController {
     }
     */
 
+    @Operation(summary = "아기 정보 등록",
+            description = "로그인한 사용자의 이름과 아기 정보를 등록하고, 선택된 아기 ID도 자동으로 저장합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "아기 정보 등록 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
+    })
     @PostMapping("/baby")
     public ResponseEntity<?> registerBaby(
             @RequestBody BabyRegisterRequest requestDto,
@@ -54,7 +63,14 @@ public class UserController {
         return ResponseEntity.ok("아기 정보 등록 완료");
     }
 
-    @PostMapping("/select-baby/{babyId}")
+    @Operation(summary = "선택된 아기 변경",
+            description = "로그인한 사용자가 등록한 아기 중 하나를 선택된 아기로 변경합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "선택된 아기 변경 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "404", description = "해당 아기 정보를 찾을 수 없음")
+    })
+    @PatchMapping("/select-baby/{babyId}")
     public ResponseEntity<?> selectBaby(@PathVariable Long babyId,
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
@@ -63,11 +79,5 @@ public class UserController {
 
         userService.changeSelectedBaby(userDetails.getUser(), babyId);
         return ResponseEntity.ok("선택된 아기 변경 완료");
-    }
-
-    @DeleteMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        userService.deleteUser(userDetails.getUser());
-        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
     }
 }
