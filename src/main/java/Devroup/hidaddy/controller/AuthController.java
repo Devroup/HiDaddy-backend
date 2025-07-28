@@ -23,7 +23,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(
+        name = "Authentication",
+        description = "Access/Refresh Token 발급 및 갱신, 로그아웃, 회원탈퇴 등 인증 관련 API"
+)
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
