@@ -113,14 +113,21 @@ public class UserController {
     @GetMapping("/me")
     @Operation(
             summary = "현재 로그인된 유저 정보 조회",
-            description = "유저의 이름, 전화번호, 배우자 전화번호, 선택된 아기의 이름을 반환합니다."
+            description = "로그인된 사용자의 이름, 전화번호, 배우자 전화번호, 선택된 아기의 이름을 반환합니다. "
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
     })
-    public ResponseEntity<UserResponse> getMyInfo(@RequestParam Long userId) {
-        UserResponse userInfo = userService.getUserInfo(userId);
+    public ResponseEntity<UserResponse> getMyInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        UserResponse userInfo = userService.getUserInfo(userDetails.getUser().getId());
         return ResponseEntity.ok(userInfo);
     }
+
 }
