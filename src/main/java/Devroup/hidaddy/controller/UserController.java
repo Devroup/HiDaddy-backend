@@ -85,4 +85,28 @@ public class UserController {
         userService.changeSelectedBaby(userDetails.getUser(), babyId);
         return ResponseEntity.ok("선택된 아기 변경 완료");
     }
+
+
+    @PatchMapping("/change-name")
+    @Operation(
+            summary = "유저 이름 변경",
+            description = "로그인된 사용자의 이름을 새 이름으로 변경합니다. "
+                    + "요청 시 JSON 바디로 `userName`을 전달하며, "
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "유저 이름 변경 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
+    })
+    public ResponseEntity<?> changeName(
+            @RequestBody ChangeUserNameRequest requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("인증이 필요합니다.");
+        }
+
+        userService.changeUserName(userDetails.getUser(), requestDto.getUserName());
+        return ResponseEntity.ok("유저 이름 변경 완료");
+    }
 }
