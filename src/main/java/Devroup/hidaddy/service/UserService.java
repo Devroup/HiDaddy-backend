@@ -56,6 +56,14 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void changeUserName(User user, String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("이름은 비워둘 수 없습니다.");
+        }
+        user.setName(userName);
+        userRepository.save(user);
+    }
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
