@@ -109,4 +109,18 @@ public class UserController {
         userService.changeUserName(userDetails.getUser(), requestDto.getUserName());
         return ResponseEntity.ok("유저 이름 변경 완료");
     }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "현재 로그인된 유저 정보 조회",
+            description = "유저의 이름, 전화번호, 배우자 전화번호, 선택된 아기의 이름을 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "유저 정보 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
+    })
+    public ResponseEntity<UserResponse> getMyInfo(@RequestParam Long userId) {
+        UserResponse userInfo = userService.getUserInfo(userId);
+        return ResponseEntity.ok(userInfo);
+    }
 }

@@ -116,4 +116,18 @@ public class UserService {
         // 사용자 삭제
         userRepository.delete(user);
     }
+
+    public UserResponse getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String babyName = null;
+        if (user.getSelectedBabyId() != null) {
+            babyName = babyRepository.findById(user.getSelectedBabyId())
+                    .map(Baby::getName)
+                    .orElse(null);
+        }
+
+        return new UserResponse(user, babyName);
+    }
 }
