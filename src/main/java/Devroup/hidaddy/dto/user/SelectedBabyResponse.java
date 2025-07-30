@@ -14,14 +14,14 @@ import java.time.temporal.ChronoUnit;
 public class SelectedBabyResponse {
     private String nickname;
     private String dDay;
-    private String profileImageUrl;
+    private String babyImageUrl;
     private String message;
 
     public static SelectedBabyResponse from(Baby baby) {
         return SelectedBabyResponse.builder()
                 .nickname(baby.getName())
                 .dDay(formatDday(baby.getDueDate().toLocalDate()))
-                .profileImageUrl(baby.getProfileImageUrl())
+                .babyImageUrl(baby.getBabyImageUrl())
                 .message(baby.getMessage())
                 .build();
     }

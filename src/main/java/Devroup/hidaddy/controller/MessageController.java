@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(
         name = "Message",
-        description = "메시지 전송 관련 API"
+        description = "메시지 전송 API"
 )
 @RestController
 @RequiredArgsConstructor

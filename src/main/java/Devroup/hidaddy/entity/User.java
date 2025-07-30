@@ -38,6 +38,10 @@ public class User {
     @Column(name = "social_id")
     private String socialId;
 
+    @Column(name = "profile_image_url", nullable = true)
+    private String profileImageUrl;
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
