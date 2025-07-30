@@ -1,4 +1,4 @@
-package Devroup.hidaddy.dto.mainpage;                                                      
+package Devroup.hidaddy.dto.user;
 
 import Devroup.hidaddy.entity.Baby;
 import lombok.AllArgsConstructor;
@@ -11,14 +11,14 @@ import java.time.temporal.ChronoUnit;
 @Getter
 @Builder
 @AllArgsConstructor
-public class MainpageResponse {
+public class SelectedBabyResponse {
     private String nickname;
     private String dDay;
     private String profileImageUrl;
     private String message;
 
-    public static MainpageResponse from(Baby baby) {
-        return MainpageResponse.builder()
+    public static SelectedBabyResponse from(Baby baby) {
+        return SelectedBabyResponse.builder()
                 .nickname(baby.getName())
                 .dDay(formatDday(baby.getDueDate().toLocalDate()))
                 .profileImageUrl(baby.getProfileImageUrl())
@@ -33,4 +33,4 @@ public class MainpageResponse {
 
         return (diff > 0) ? "D-" + diff : "D+" + Math.abs(diff);
     }
-}
+} 

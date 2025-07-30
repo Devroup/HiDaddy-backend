@@ -130,4 +130,18 @@ public class UserService {
 
         return new UserResponse(user, babyName);
     }
+
+    public SelectedBabyResponse getSelectedBabyInfo(User currentUser) {
+        Long selectedBabyId = currentUser.getSelectedBabyId();
+        if(selectedBabyId == null)
+            throw new IllegalArgumentException("선택된 아이가 없습니다.");
+
+        Baby baby = babyRepository.findByIdAndUserId(
+                        currentUser.getSelectedBabyId(),
+                        currentUser.getId()
+                )
+                .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
+
+        return SelectedBabyResponse.from(baby);
+    }
 }
