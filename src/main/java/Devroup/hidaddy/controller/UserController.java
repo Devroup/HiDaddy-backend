@@ -1,6 +1,8 @@
 package Devroup.hidaddy.controller;
 
 import Devroup.hidaddy.dto.user.*;
+import Devroup.hidaddy.entity.Baby;
+import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,8 +84,8 @@ public class UserController {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        userService.changeSelectedBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok("선택된 아기 변경 완료");
+        Baby selectedBaby = userService.changeSelectedBaby(userDetails.getUser(), babyId);
+        return ResponseEntity.ok(new BabyResponse(selectedBaby));
     }
 
 
@@ -130,4 +132,23 @@ public class UserController {
         return ResponseEntity.ok(userInfo);
     }
 
+    @Operation(
+            summary = "사용자 및 파트너 전화번호 등록/수정",
+            description = "로그인된 사용자의 `phone`과 `partnerphonee`을 등록하거나 수정합니다. "
+                    + "요청 시 JSON 바디로 `phone`, `partnerphone` 값을 전달하며, "
+                    + "둘 중 하나만 보내도 되고, 보내지 않은 필드는 기존 값을 유지합니다. "
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "전화번호 등록/수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (전화번호 형식 오류 등)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
+    })
+    @PatchMapping("/phone")
+    public ResponseEntity<User> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                  @RequestBody PhoneUpdateRequest dto) {
+        User updated = userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
+        return ResponseEntity.ok(updated);
+    }
 }
