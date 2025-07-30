@@ -36,7 +36,7 @@ public class Baby {
         createdAt = LocalDateTime.now(); // 생성 시간을 현재 시간으로 자동 설정
     }
 
-    private String profileImageUrl;
+    private String babyImageUrl;
 
     private String message;
 }
