@@ -7,9 +7,12 @@ import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.repository.user.*;
 import Devroup.hidaddy.repository.auth.*;
 import Devroup.hidaddy.jwt.JwtUtil;
+import Devroup.hidaddy.util.S3Uploader;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -21,8 +24,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
+    private final S3Uploader s3Uploader;
+    
+    @Value("${cloudfront.domain}")
+    private String cloudFrontDomain;
 
-        public void registerBaby(BabyRegisterRequest dto, User user) {
+    public void registerBaby(BabyRegisterRequest dto, User user) {
         // 1. 유저 이름 업데이트
         user.setName(dto.getUserName());
 
@@ -80,6 +87,7 @@ public class UserService {
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
+                    newUser.setProfileImageUrl(cloudFrontDomain + "/default_image.svg"); // 기본 프로필 이미지 URL 설정
                     return userRepository.save(newUser);
                 });
 
@@ -143,5 +151,28 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
 
         return SelectedBabyResponse.from(baby);
+    }
+
+    @Transactional
+    public String uploadProfileImage(User user, MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일이 필요합니다.");
+        }
+
+        // 기존 프로필 이미지가 있다면 S3에서 삭제
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+            String imageKey = user.getProfileImageUrl().replace(cloudFrontDomain + "/", "");
+            s3Uploader.delete(imageKey);
+        }
+
+        // 새 이미지를 S3에 업로드
+        String imageUrl = s3Uploader.upload(image, "profile");
+        imageUrl = cloudFrontDomain + "/" + imageUrl;
+
+        // 사용자의 프로필 이미지 URL 업데이트
+        user.setProfileImageUrl(imageUrl);
+        userRepository.save(user);
+
+        return imageUrl;
     }
 }

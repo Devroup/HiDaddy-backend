@@ -3,6 +3,8 @@ package Devroup.hidaddy.controller;
 import Devroup.hidaddy.dto.user.*;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.UserService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -121,5 +123,28 @@ public class UserController {
 
         userService.changeSelectedBaby(userDetails.getUser(), babyId);
         return ResponseEntity.ok("선택된 아기 변경 완료");
+    }
+
+    @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "프로필 이미지 업로드",
+            description = "로그인된 사용자의 프로필 이미지를 업로드합니다. "
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 이미지 업로드 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    public ResponseEntity<String> uploadProfileImage(
+            @RequestPart(value = "image", required = true) MultipartFile image,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("인증이 필요합니다.");
+        }
+
+        String imageUrl = userService.uploadProfileImage(userDetails.getUser(), image);
+        return ResponseEntity.ok(imageUrl);
     }
 }
