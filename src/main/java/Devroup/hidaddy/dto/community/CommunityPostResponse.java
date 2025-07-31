@@ -18,6 +18,7 @@ public class CommunityPostResponse {
     private Integer likeCount;
     private Integer commentCount;
     private String authorName;
+    private String authorProfileImageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isLiked;
@@ -30,6 +31,7 @@ public class CommunityPostResponse {
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .authorName(post.getUser() != null ? post.getUser().getName() : "Unknown")
+                .authorProfileImageUrl(post.getUser() != null ? post.getUser().getProfileImageUrl() : null)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .isLiked(isLiked)
