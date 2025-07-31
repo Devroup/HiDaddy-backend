@@ -50,7 +50,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public Baby changeSelectedBaby(User user, Long babyId) {
+    public BabyResponse changeSelectedBaby(User user, Long babyId) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
 
@@ -62,7 +62,7 @@ public class UserService {
         user.setSelectedBabyId(babyId);
         userRepository.save(user);
 
-        return baby;
+        return new BabyResponse(baby);
     }
 
     public void changeUserName(User user, String userName) {

@@ -142,7 +142,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    public ResponseEntity<BabyResponse> updateBabySwaggerTest(
+    public ResponseEntity<BabyResponse> updateBaby(
             @PathVariable Long babyId,
             @RequestParam("name") String name,
             @RequestParam("dueDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dueDate,
@@ -187,7 +187,8 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        return ResponseEntity.ok(babyService.registerBabyBasic(request, userDetails.getUser()));
+        BabyResponse response = babyService.registerBabyBasic(request, userDetails.getUser());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "선택된 아기 변경",
@@ -204,8 +205,8 @@ public class UserController {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        Baby selectedBaby = userService.changeSelectedBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok(new BabyResponse(selectedBaby));
+        BabyResponse response = userService.changeSelectedBaby(userDetails.getUser(), babyId);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
