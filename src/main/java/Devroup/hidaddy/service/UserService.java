@@ -25,7 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
     private final S3Uploader s3Uploader;
-    
+
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
 
@@ -50,7 +50,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void changeSelectedBaby(User user, Long babyId) {
+    public BabyResponse changeSelectedBaby(User user, Long babyId) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
 
@@ -61,6 +61,8 @@ public class UserService {
 
         user.setSelectedBabyId(babyId);
         userRepository.save(user);
+
+        return new BabyResponse(baby);
     }
 
     public void changeUserName(User user, String userName) {
@@ -174,5 +176,19 @@ public class UserService {
         userRepository.save(user);
 
         return imageUrl;
+    }
+
+    public void updatePhoneNumbers(Long userId, PhoneUpdateRequest dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getPartnerPhone() != null) {
+            user.setPartnerPhone(dto.getPartnerPhone());
+        }
+
+        userRepository.save(user);
     }
 }

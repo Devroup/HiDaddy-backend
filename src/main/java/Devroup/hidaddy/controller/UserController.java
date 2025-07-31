@@ -1,8 +1,12 @@
 package Devroup.hidaddy.controller;
 
 import Devroup.hidaddy.dto.user.*;
+import Devroup.hidaddy.entity.Baby;
+import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.security.UserDetailsImpl;
+import Devroup.hidaddy.service.BabyService;
 import Devroup.hidaddy.service.UserService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,9 +18,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Tag(
         name = "User",
-        description = "회원 정보, 사용자, 아기 관련 API"
+        description = "회원 정보, 아기 등록 및 선택 등 사용자 관련 API"
 )
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class UserController {
 
     private final UserService userService;
+    private final BabyService babyService;
 
     @GetMapping("")
     @Operation(
@@ -68,6 +76,7 @@ public class UserController {
         return ResponseEntity.ok("유저 이름 변경 완료");
     }
 
+    // 아기 등록 (튜토리얼)
     @Operation(summary = "아기 정보 등록 (튜토리얼)",
             description = "로그인한 사용자의 이름과 아기 정보를 등록하고, 선택된 아기 ID도 자동으로 저장합니다.")
     @ApiResponses({
@@ -87,27 +96,101 @@ public class UserController {
         return ResponseEntity.ok("아기 정보 등록 완료");
     }
 
-    @GetMapping("/baby")
-    @Operation(
-            summary = "선택된 아기 정보 조회",
-            description = "로그인된 사용자가 선택한 아기의 상세 정보(이름, D-day, 프로필 이미지, 메시지)를 반환합니다. "
-                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
-    )
+    // 전체 아기 목록 조회
+    @Operation(summary = "전체 아기 목록 조회",
+            description = "로그인된 사용자의 전체 아기 정보를 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "선택된 아기 정보 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
-            @ApiResponse(responseCode = "400", description = "선택된 아기가 없거나 해당 아기를 찾을 수 없음")
+            @ApiResponse(responseCode = "200", description = "아기 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<SelectedBabyResponse> getSelectedBabyInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    @GetMapping("/baby")
+    public ResponseEntity<List<BabyResponse>> getAllBabies(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        SelectedBabyResponse selectedBabyInfo = userService.getSelectedBabyInfo(userDetails.getUser());
-        return ResponseEntity.ok(selectedBabyInfo);
+        List<BabyResponse> babies = babyService.getBabies(userDetails.getUser());
+        return ResponseEntity.ok(babies);
     }
 
-    @PatchMapping("/selected-baby/{babyId}")
+    // 특정 아기 정보 조회
+    @Operation(summary = "특정 아기 정보 조회",
+            description = "지정된 아기 ID에 해당하는 정보를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "아기 정보 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "403", description = "권한 없음"),
+            @ApiResponse(responseCode = "404", description = "해당 아기 없음")
+    })
+    @GetMapping("/baby/{babyId}")
+    public ResponseEntity<BabyResponse> getBaby(
+            @PathVariable Long babyId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        if (userDetails == null) return ResponseEntity.status(401).build();
+
+        BabyResponse baby = babyService.getBaby(userDetails.getUser(), babyId);
+        return ResponseEntity.ok(baby);
+    }
+
+    // 아기 수정 (이름, 날짜, 이미지)
+    @PatchMapping(value = "/baby/{babyId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "아기 정보 수정 (JSON + 이미지 Multipart)", description = "지정된 아기의 이름, 출산 예정일, 프로필 이미지 등을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    public ResponseEntity<BabyResponse> updateBaby(
+            @PathVariable Long babyId,
+            @RequestParam("name") String name,
+            @RequestParam("dueDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dueDate,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        BabyUpdateRequest dto = new BabyUpdateRequest();
+        dto.setName(name);
+        dto.setDueDate(dueDate);
+
+        BabyResponse response = babyService.updateBaby(userDetails.getUser(), babyId, dto, image);
+        return ResponseEntity.ok(response);
+    }
+
+
+    // 아기 삭제
+    @Operation(summary = "아기 삭제", description = "지정된 아기 정보를 삭제합니다.")
+    @DeleteMapping("/baby/{babyId}")
+    public ResponseEntity<String> deleteBaby(@PathVariable Long babyId,
+                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) return ResponseEntity.status(401).build();
+        babyService.deleteBaby(userDetails.getUser(), babyId);
+        return ResponseEntity.ok("아기 삭제 완료");
+    }
+
+    @Operation(summary = "아기 정보 등록", description = "태명과 출산 예정일만 입력하여 아기를 등록합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "아기 정보 등록 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @PostMapping("/baby/basic")
+    public ResponseEntity<BabyResponse> registerBabySimple(
+            @RequestBody BabyBasicRegisterRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        BabyResponse response = babyService.registerBabyBasic(request, userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "선택된 아기 변경",
             description = "로그인한 사용자가 등록한 아기 중 하나를 선택된 아기로 변경합니다.")
     @ApiResponses({
@@ -115,14 +198,15 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "404", description = "해당 아기 정보를 찾을 수 없음")
     })
+    @PatchMapping("/select-baby/{babyId}")
     public ResponseEntity<?> selectBaby(@PathVariable Long babyId,
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        userService.changeSelectedBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok("선택된 아기 변경 완료");
+        BabyResponse response = userService.changeSelectedBaby(userDetails.getUser(), babyId);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -139,12 +223,32 @@ public class UserController {
     public ResponseEntity<String> uploadProfileImage(
             @RequestPart(value = "image", required = true) MultipartFile image,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         if (userDetails == null) {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
         String imageUrl = userService.uploadProfileImage(userDetails.getUser(), image);
         return ResponseEntity.ok(imageUrl);
+    }
+
+    @Operation(
+            summary = "사용자 및 파트너 전화번호 등록/수정",
+            description = "로그인된 사용자의 `phone`과 `partnerphonee`을 등록하거나 수정합니다. "
+                    + "요청 시 JSON 바디로 `phone`, `partnerphone` 값을 전달하며, "
+                    + "둘 중 하나만 보내도 되고, 보내지 않은 필드는 기존 값을 유지합니다. "
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "전화번호 등록/수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (전화번호 형식 오류 등)"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
+            @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
+    })
+    @PatchMapping("/phone")
+    public ResponseEntity<String> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                  @RequestBody PhoneUpdateRequest dto) {
+        userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
+        return ResponseEntity.ok("전화번호가 성공적으로 변경되었습니다.");
     }
 }

@@ -1,15 +1,13 @@
 package Devroup.hidaddy.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity // JPA가 이 클래스를 엔티티로 인식하도록 지정하는 어노테이션
 @Table(name = "baby") // 데이터베이스에서 사용될 테이블 이름을 'baby'로 지정
 @Getter // Lombok: 모든 필드에 대한 getter 메소드를 자동 생성
+@Setter
 @NoArgsConstructor // Lombok: 파라미터가 없는 기본 생성자를 자동 생성
 @AllArgsConstructor // Lombok: 모든 필드를 파라미터로 받는 생성자를 자동 생성
 @Builder // Lombok: 빌더 패턴을 사용하여 객체를 생성할 수 있도록 지원   
