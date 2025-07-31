@@ -47,7 +47,7 @@ public class BabyService {
 
     // 아기 수정
     @Transactional
-    public BabyResponse updateBaby(User user, Long babyId, BabyUpdateRequest dto, MultipartFile image) {
+    public BabyResponse updateBaby(User user, Long babyId, BabyUpdateRequest dto) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
 
@@ -57,19 +57,6 @@ public class BabyService {
 
         if (dto.getName() != null) baby.setName(dto.getName());
         if (dto.getDueDate() != null) baby.setDueDate(dto.getDueDate().atStartOfDay());
-
-        if (image != null && !image.isEmpty()) {
-            // 기존 이미지 삭제
-            if (baby.getBabyImageUrl() != null && !baby.getBabyImageUrl().isEmpty()) {
-                String imageKey = baby.getBabyImageUrl().replace(cloudFrontDomain + "/", "");
-                s3Uploader.delete(imageKey);
-            }
-
-            // 새 이미지 업로드
-            String imageUrl = s3Uploader.upload(image, "baby-profile");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
-            baby.setBabyImageUrl(imageUrl);
-        }
 
         return new BabyResponse(babyRepository.save(baby));
     }
@@ -85,11 +72,11 @@ public class BabyService {
     }
 
     @Transactional
-    public BabyResponse registerBabyBasic(BabyBasicRegisterRequest request, User user) {
+    public BabyResponse registerBabyBasic(BabyBasicRegisterRequest dto, User user) {
         // 아기 생성
         Baby baby = Baby.builder()
-                .name(request.getBabyName())
-                .dueDate(request.getParsedDueDate())
+                .name(dto.getBabyName())
+                .dueDate(dto.getParsedDueDate())
                 .user(user)
                 .build();
 

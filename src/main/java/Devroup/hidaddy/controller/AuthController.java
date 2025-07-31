@@ -7,6 +7,7 @@ import Devroup.hidaddy.dto.auth.AuthRequest;
 import Devroup.hidaddy.dto.auth.LogoutRequest;
 import Devroup.hidaddy.dto.auth.RefreshTokenRequest;
 import Devroup.hidaddy.repository.auth.RefreshTokenRepository;
+import Devroup.hidaddy.repository.user.UserRepository;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.AuthService;
 import Devroup.hidaddy.service.UserService;
@@ -38,6 +39,7 @@ public class AuthController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserService userService;
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @Operation(
             summary = "Access Token 재발급",
@@ -55,7 +57,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않거나 만료된 리프레시 토큰");
         }
 
-        User user = foundToken.getUser();
+        User user = userRepository.findById(foundToken.getUser().getId()).orElseThrow();
         String newAccessToken = jwtUtil.createAccessToken(user);
 
         return ResponseEntity.ok(Map.of(
@@ -88,13 +90,14 @@ public class AuthController {
                     ? authService.getNaverEmail(accessToken)
                     : JwtUtil.decodeClaim(idToken, "email");
 
-            Map<String, String> tokens = userService.saveOrLoginUser(
+            Map<String, Object> tokens = userService.saveOrLoginUser(
                     null, email, null, null, provider.toUpperCase(), socialId
             );
 
             return ResponseEntity.ok(Map.of(
                     "accessToken", tokens.get("accessToken"),
                     "refreshToken", tokens.get("refreshToken"),
+                    "signed", !(Boolean) tokens.get("isNewUser"),  // 기존 유저면 true
                     "message", "로그인 성공"
             ));
         } catch (Exception e) {

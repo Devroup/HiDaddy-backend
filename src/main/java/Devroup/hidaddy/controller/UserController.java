@@ -1,12 +1,9 @@
 package Devroup.hidaddy.controller;
 
 import Devroup.hidaddy.dto.user.*;
-import Devroup.hidaddy.entity.Baby;
-import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.BabyService;
 import Devroup.hidaddy.service.UserService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Tag(
@@ -136,28 +132,23 @@ public class UserController {
     }
 
     // 아기 수정 (이름, 날짜, 이미지)
-    @PatchMapping(value = "/baby/{babyId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "아기 정보 수정 (JSON + 이미지 Multipart)", description = "지정된 아기의 이름, 출산 예정일, 프로필 이미지 등을 수정합니다.")
+    @PatchMapping("/baby/{babyId}")
+    @Operation(summary = "아기 정보 수정", description = "지정된 아기의 이름, 출산 예정일 등을 수정합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
     public ResponseEntity<BabyResponse> updateBaby(
             @PathVariable Long babyId,
-            @RequestParam("name") String name,
-            @RequestParam("dueDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dueDate,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestBody BabyUpdateRequest dto,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        BabyUpdateRequest dto = new BabyUpdateRequest();
-        dto.setName(name);
-        dto.setDueDate(dueDate);
-
-        BabyResponse response = babyService.updateBaby(userDetails.getUser(), babyId, dto, image);
+        BabyResponse response = babyService.updateBaby(userDetails.getUser(), babyId, dto);
         return ResponseEntity.ok(response);
     }
 
