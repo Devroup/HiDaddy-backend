@@ -90,13 +90,14 @@ public class AuthController {
                     ? authService.getNaverEmail(accessToken)
                     : JwtUtil.decodeClaim(idToken, "email");
 
-            Map<String, String> tokens = userService.saveOrLoginUser(
+            Map<String, Object> tokens = userService.saveOrLoginUser(
                     null, email, null, null, provider.toUpperCase(), socialId
             );
 
             return ResponseEntity.ok(Map.of(
                     "accessToken", tokens.get("accessToken"),
                     "refreshToken", tokens.get("refreshToken"),
+                    "signed", !(Boolean) tokens.get("isNewUser"),  // 기존 유저면 true
                     "message", "로그인 성공"
             ));
         } catch (Exception e) {

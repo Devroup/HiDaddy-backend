@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -73,8 +74,10 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
-    public Map<String, String> saveOrLoginUser(String name, String email, String phone,
+    public Map<String, Object> saveOrLoginUser(String name, String email, String phone,
                                                String partnerPhone, String loginType, String socialId) {
+
+        AtomicBoolean isNewUser = new AtomicBoolean(false);
 
         // 유저 조회 또는 생성
         User user = userRepository.findBySocialIdAndLoginType(socialId, loginType)
@@ -86,7 +89,8 @@ public class UserService {
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
-                    newUser.setProfileImageUrl(cloudFrontDomain + "/profile/default_image.svg"); // 기본 프로필 이미지 URL 설정
+                    newUser.setProfileImageUrl(cloudFrontDomain + "/profile/default_image.svg");
+                    isNewUser.set(true);
                     return userRepository.save(newUser);
                 });
 
@@ -95,7 +99,7 @@ public class UserService {
         String refreshTokenStr = jwtUtil.createRefreshToken();
         LocalDateTime expiredAt = LocalDateTime.now().plusDays(365);
 
-        // RefreshToken DB에 저장 (기존 존재 여부에 따라 분기)
+        // RefreshToken DB 저장 또는 갱신
         RefreshToken existing = refreshTokenRepository.findByUser(user).orElse(null);
         if (existing != null) {
             existing.updateToken(refreshTokenStr, expiredAt);
@@ -105,11 +109,13 @@ public class UserService {
             refreshTokenRepository.save(refreshToken);
         }
 
-        // 응답으로 전달할 토큰들
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshTokenStr);
-        return tokens;
+        // 응답 데이터 구성
+        Map<String, Object> response = new HashMap<>();
+        response.put("accessToken", accessToken);
+        response.put("refreshToken", refreshTokenStr);
+        response.put("isNewUser", isNewUser.get()); // true = 처음 가입한 유저
+
+        return response;
     }
 
     @Transactional
