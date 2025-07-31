@@ -30,22 +30,19 @@ public class UserService {
     private String cloudFrontDomain;
 
     public void registerBaby(BabyRegisterRequest dto, User user) {
-        // 1. 유저 이름 업데이트
+        // 유저 이름 업데이트
         user.setName(dto.getUserName());
 
-        // 2. dueDate 파싱
-        LocalDateTime dueDate = dto.getParsedDueDate();
-
-        // 3. 아기 생성
+        // 아기 생성
         Baby baby = Baby.builder()
                 .name(dto.getBabyName())
-                .dueDate(dueDate)
+                .dueDate(dto.getParsedDueDate())
                 .user(user)
                 .build();
 
         babyRepository.save(baby);
 
-        // 4. 선택된 아기 ID 설정
+        // 선택된 아기 ID 설정
         user.setSelectedBabyId(baby.getId());
         userRepository.save(user);
     }

@@ -14,12 +14,10 @@ public class BabyResponse {
     private String name;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // 날짜 포맷 지정
     private LocalDate dueDate;
-    private String profileImage;
 
     public BabyResponse(Baby baby) {
         this.id = baby.getId();
         this.name = baby.getName();
         this.dueDate = baby.getDueDate().toLocalDate();
-        this.profileImage = baby.getBabyImageUrl(); // 있으면 가져오기
     }
 }
