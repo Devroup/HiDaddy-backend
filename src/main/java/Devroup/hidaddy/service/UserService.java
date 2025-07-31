@@ -87,7 +87,7 @@ public class UserService {
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
-                    newUser.setProfileImageUrl(cloudFrontDomain + "/default_image.svg"); // 기본 프로필 이미지 URL 설정
+                    newUser.setProfileImageUrl(cloudFrontDomain + "/profile/default_image.svg"); // 기본 프로필 이미지 URL 설정
                     return userRepository.save(newUser);
                 });
 
