@@ -178,7 +178,7 @@ public class UserService {
         return imageUrl;
     }
 
-    public User updatePhoneNumbers(Long userId, PhoneUpdateRequest dto) {
+    public void updatePhoneNumbers(Long userId, PhoneUpdateRequest dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
@@ -188,6 +188,7 @@ public class UserService {
         if (dto.getPartnerPhone() != null) {
             user.setPartnerPhone(dto.getPartnerPhone());
         }
-        return userRepository.save(user);
+
+        userRepository.save(user);
     }
 }

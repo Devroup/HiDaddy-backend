@@ -245,9 +245,9 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
     })
     @PatchMapping("/phone")
-    public ResponseEntity<User> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
+    public ResponseEntity<String> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                   @RequestBody PhoneUpdateRequest dto) {
-        User updated = userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
-        return ResponseEntity.ok(updated);
+        userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
+        return ResponseEntity.ok("전화번호가 성공적으로 변경되었습니다.");
     }
 }
