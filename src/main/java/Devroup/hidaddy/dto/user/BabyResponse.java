@@ -20,6 +20,6 @@ public class BabyResponse {
         this.id = baby.getId();
         this.name = baby.getName();
         this.dueDate = baby.getDueDate().toLocalDate();
-        this.profileImage = baby.getProfileImageUrl(); // 있으면 가져오기
+        this.profileImage = baby.getBabyImageUrl(); // 있으면 가져오기
     }
 }
