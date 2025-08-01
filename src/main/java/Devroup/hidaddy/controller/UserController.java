@@ -79,6 +79,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "아기 정보 등록 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
+
     @PostMapping("/baby")
     public ResponseEntity<?> registerBaby(
             @RequestBody BabyRegisterRequest requestDto,
@@ -99,7 +100,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "아기 목록 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    @GetMapping("/baby")
+    @GetMapping("/all-babies")
     public ResponseEntity<List<BabyResponse>> getAllBabies(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -112,23 +113,22 @@ public class UserController {
     }
 
     // 특정 아기 정보 조회
-    @Operation(summary = "특정 아기 정보 조회",
-            description = "지정된 아기 ID에 해당하는 정보를 반환합니다.")
+    @Operation(summary = "특정 아기 정보 조회 (메인화면 + 마이페이지 공용)",
+            description = "선택된 아기의 정보를 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "아기 정보 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "403", description = "권한 없음"),
             @ApiResponse(responseCode = "404", description = "해당 아기 없음")
     })
-    @GetMapping("/baby/{babyId}")
-    public ResponseEntity<BabyResponse> getBaby(
-            @PathVariable Long babyId,
+    @GetMapping("/baby")
+    public ResponseEntity<SelectedBabyResponse> getSelectedBabyInfo(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) return ResponseEntity.status(401).build();
 
-        BabyResponse baby = babyService.getBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok(baby);
+        SelectedBabyResponse selectedBabyInfo = userService.getSelectedBabyInfo(userDetails.getUser());
+        return ResponseEntity.ok(selectedBabyInfo);
     }
 
     // 아기 수정 (이름, 날짜, 이미지)
