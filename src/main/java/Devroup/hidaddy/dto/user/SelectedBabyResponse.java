@@ -4,6 +4,7 @@ import Devroup.hidaddy.entity.Baby;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -12,17 +13,22 @@ import java.time.temporal.ChronoUnit;
 @Builder
 @AllArgsConstructor
 public class SelectedBabyResponse {
-    private String nickname;
+    private Long id;
+    private String name;
     private String dDay;
     private String babyImageUrl;
-    private String message;
+    private String comment;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // 날짜 포맷 지정
+    private LocalDate dueDate;
 
-    public static SelectedBabyResponse from(Baby baby) {
+    public static SelectedBabyResponse from(Baby baby, String comment) {
         return SelectedBabyResponse.builder()
-                .nickname(baby.getName())
+                .id(baby.getId())
+                .name(baby.getName())
                 .dDay(formatDday(baby.getDueDate().toLocalDate()))
                 .babyImageUrl(baby.getBabyImageUrl())
-                .message(baby.getMessage())
+                .comment(comment)
+                .dueDate(baby.getDueDate().toLocalDate())
                 .build();
     }
 

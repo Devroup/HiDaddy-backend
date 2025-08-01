@@ -35,6 +35,4 @@ public class Baby {
     }
 
     private String babyImageUrl;
-
-    private String message;
 }
