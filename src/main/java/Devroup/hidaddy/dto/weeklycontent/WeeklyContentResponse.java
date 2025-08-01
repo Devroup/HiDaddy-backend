@@ -10,7 +10,6 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class WeeklyContentResponse {
-    private Long userId;
     private int currentWeek;
     private String babyContent;
     private String momContent;
