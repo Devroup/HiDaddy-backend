@@ -15,4 +15,6 @@ public interface BabyRepository extends JpaRepository<Baby, Long> {
     void deleteAllByUser(User user);
 
     Optional<Baby> findByIdAndUserId(Long babyId, Long userId);
+
+    Optional<Baby> findById(Long babyId);
 }

@@ -3,6 +3,8 @@ package Devroup.hidaddy.controller.emotionDiary;
 import Devroup.hidaddy.dto.emotionDiary.*;
 import Devroup.hidaddy.entity.User;    
 import Devroup.hidaddy.service.EmotionDiaryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.XSlf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,10 +19,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/emotion-diaries")
 @RequiredArgsConstructor
+@Tag(name = "Emotion-Diary", description = "감정일기 API")
 public class EmotionDiaryController {
     private final EmotionDiaryService emotionDiaryService;
 
     // 감정일기 생성 (create)
+    @Operation(summary = "감정일기 생성", description = "페이징 처리된 게시글 목록을 내림차순으로 조회합니다.")
     @PostMapping
     public ResponseEntity<Void> createEmotionDiary(
             @AuthenticationPrincipal User currentUser,
@@ -32,6 +36,7 @@ public class EmotionDiaryController {
 
     // 감정일기 조회 (read)
     // 감정일기 목록 조회
+    @Operation(summary = "감정일기 목록 조회", description = "캘린더에 사용할 감정일기 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<List<EmotionDiaryResponse>> readEmotionDiary(
             // 범위 지정하여 범위 내의 감정일기 조회

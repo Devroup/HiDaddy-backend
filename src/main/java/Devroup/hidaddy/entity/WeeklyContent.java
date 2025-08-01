@@ -19,8 +19,12 @@ public class WeeklyContent {
 
     private Integer week;
 
-    private String title;
+    @Lob
+    private String babyContent;
 
     @Lob
-    private String content;
+    private String momContent;
+
+    @Lob
+    private String healthContent;
 } 
