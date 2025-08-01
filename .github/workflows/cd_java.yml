@@ -1,4 +1,4 @@
-name: Java CD (Gradle + Spring Boot)
+name: Java CD (Gradle + Spring Boot) 
 
 on:
   push:

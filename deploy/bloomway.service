@@ -2,7 +2,7 @@
 Description=Bloomway Spring Boot App
 After=network.target
 
-[Service]
+[Service] 
 User=ubuntu
 ExecStart=/usr/bin/java -jar /home/ubuntu/build/libs/bloomway-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 SuccessExitStatus=143

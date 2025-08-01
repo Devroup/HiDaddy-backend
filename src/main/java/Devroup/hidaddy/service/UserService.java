@@ -7,13 +7,17 @@ import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.repository.user.*;
 import Devroup.hidaddy.repository.auth.*;
 import Devroup.hidaddy.jwt.JwtUtil;
+import Devroup.hidaddy.util.S3Uploader;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -21,29 +25,30 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
+    private final S3Uploader s3Uploader;
 
-        public void registerBaby(BabyRegisterRequest dto, User user) {
-        // 1. 유저 이름 업데이트
+    @Value("${cloudfront.domain}")
+    private String cloudFrontDomain;
+
+    public void registerBaby(BabyRegisterRequest dto, User user) {
+        // 유저 이름 업데이트
         user.setName(dto.getUserName());
 
-        // 2. dueDate 파싱
-        LocalDateTime dueDate = dto.getParsedDueDate();
-
-        // 3. 아기 생성
+        // 아기 생성
         Baby baby = Baby.builder()
                 .name(dto.getBabyName())
-                .dueDate(dueDate)
+                .dueDate(dto.getParsedDueDate())
                 .user(user)
                 .build();
 
         babyRepository.save(baby);
 
-        // 4. 선택된 아기 ID 설정
+        // 선택된 아기 ID 설정
         user.setSelectedBabyId(baby.getId());
         userRepository.save(user);
     }
 
-    public void changeSelectedBaby(User user, Long babyId) {
+    public BabyResponse changeSelectedBaby(User user, Long babyId) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
 
@@ -54,13 +59,25 @@ public class UserService {
 
         user.setSelectedBabyId(babyId);
         userRepository.save(user);
+
+        return new BabyResponse(baby);
+    }
+
+    public void changeUserName(User user, String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("이름은 비워둘 수 없습니다.");
+        }
+        user.setName(userName);
+        userRepository.save(user);
     }
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
-    public Map<String, String> saveOrLoginUser(String name, String email, String phone,
+    public Map<String, Object> saveOrLoginUser(String name, String email, String phone,
                                                String partnerPhone, String loginType, String socialId) {
+
+        AtomicBoolean isNewUser = new AtomicBoolean(false);
 
         // 유저 조회 또는 생성
         User user = userRepository.findBySocialIdAndLoginType(socialId, loginType)
@@ -72,6 +89,8 @@ public class UserService {
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
+                    newUser.setProfileImageUrl(cloudFrontDomain + "/profile/default_image.svg");
+                    isNewUser.set(true);
                     return userRepository.save(newUser);
                 });
 
@@ -80,7 +99,7 @@ public class UserService {
         String refreshTokenStr = jwtUtil.createRefreshToken();
         LocalDateTime expiredAt = LocalDateTime.now().plusDays(365);
 
-        // RefreshToken DB에 저장 (기존 존재 여부에 따라 분기)
+        // RefreshToken DB 저장 또는 갱신
         RefreshToken existing = refreshTokenRepository.findByUser(user).orElse(null);
         if (existing != null) {
             existing.updateToken(refreshTokenStr, expiredAt);
@@ -90,11 +109,13 @@ public class UserService {
             refreshTokenRepository.save(refreshToken);
         }
 
-        // 응답으로 전달할 토큰들
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshTokenStr);
-        return tokens;
+        // 응답 데이터 구성
+        Map<String, Object> response = new HashMap<>();
+        response.put("accessToken", accessToken);
+        response.put("refreshToken", refreshTokenStr);
+        response.put("isNewUser", isNewUser.get()); // true = 처음 가입한 유저
+
+        return response;
     }
 
     @Transactional
@@ -107,5 +128,70 @@ public class UserService {
 
         // 사용자 삭제
         userRepository.delete(user);
+    }
+
+    public UserResponse getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String babyName = null;
+        if (user.getSelectedBabyId() != null) {
+            babyName = babyRepository.findById(user.getSelectedBabyId())
+                    .map(Baby::getName)
+                    .orElse(null);
+        }
+
+        return new UserResponse(user, babyName);
+    }
+
+    public SelectedBabyResponse getSelectedBabyInfo(User currentUser) {
+        Long selectedBabyId = currentUser.getSelectedBabyId();
+        if(selectedBabyId == null)
+            throw new IllegalArgumentException("선택된 아이가 없습니다.");
+
+        Baby baby = babyRepository.findByIdAndUserId(
+                        currentUser.getSelectedBabyId(),
+                        currentUser.getId()
+                )
+                .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
+
+        return SelectedBabyResponse.from(baby);
+    }
+
+    @Transactional
+    public String uploadProfileImage(User user, MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일이 필요합니다.");
+        }
+
+        // 기존 프로필 이미지가 있다면 S3에서 삭제
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+            String imageKey = user.getProfileImageUrl().replace(cloudFrontDomain + "/", "");
+            s3Uploader.delete(imageKey);
+        }
+
+        // 새 이미지를 S3에 업로드
+        String imageUrl = s3Uploader.upload(image, "profile");
+        imageUrl = cloudFrontDomain + "/" + imageUrl;
+
+        // 사용자의 프로필 이미지 URL 업데이트
+        user.setProfileImageUrl(imageUrl);
+        userRepository.save(user);
+
+        return imageUrl;
+    }
+
+    public void updatePhoneNumbers(Long userId, PhoneUpdateRequest dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getPartnerPhone() != null) {
+            user.setPartnerPhone(dto.getPartnerPhone());
+        }
+
+        userRepository.save(user);
     }
 }

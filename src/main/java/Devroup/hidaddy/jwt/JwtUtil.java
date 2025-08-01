@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -61,5 +62,38 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+     // id_token(Base64 인코딩된 JWT)에서 특정 claim 추출
+    public static String decodeClaim(String jwt, String claimName) {
+        try {
+            String[] parts = jwt.split("\\.");
+            if (parts.length < 2) return null;
+
+            // JWT의 Payload(Base64 URL Safe) 디코딩
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+
+            // JSON 파싱해서 claim 추출
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(payloadJson);
+            return node.has(claimName) ? node.get(claimName).asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static void printDecodedToken(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                System.out.println("❌ Invalid JWT format");
+                return;
+            }
+
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            System.out.println("🔍 [ID TOKEN PAYLOAD] " + payloadJson);
+        } catch (Exception e) {
+            System.out.println("❌ Failed to decode id_token: " + e.getMessage());
+        }
     }
 }
