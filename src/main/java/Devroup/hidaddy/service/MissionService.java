@@ -70,10 +70,16 @@ public class MissionService {
         );
         
         String guideText = WeeklyContentRepository.findByWeek(currentWeek)
-                            .map(WeeklyContent::getContent)
-                            .orElse("해당 주차에 대한 정보가 없습니다.");
+                .map(content -> String.format(
+                        "### 아기는 이렇게 자라고 있어요\n\n%s\n\n---\n\n### 아내의 몸도 변화하고 있어요\n\n%s\n\n---\n\n### 아기의 건강, 함께 지켜봐요\n\n%s",
+                        content.getBabyContent(),
+                        content.getMomContent(),
+                        content.getHealthContent()
+                ))
+                .orElse("해당 주차에 대한 정보가 없습니다.");
 
         MissionKeywordRequest aiRequest = new MissionKeywordRequest(diaries, guideText);
+
 
         MissionKeywordResponse aiResponse = restTemplate.postForObject(
             "http://3.36.201.162:6000/generate-mission",

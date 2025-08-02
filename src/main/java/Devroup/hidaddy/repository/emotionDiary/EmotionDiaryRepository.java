@@ -17,7 +17,7 @@ public interface EmotionDiaryRepository extends JpaRepository<EmotionDiary, Inte
 
     List<EmotionDiary> findAllByUserIdAndDateBetweenOrderByDateAsc(Long id, LocalDate start, LocalDate end);
 
-    Optional<EmotionDiary> findByUserIdAndDate(User currentUser, LocalDate date);
+    Optional<EmotionDiary> findByUserIdAndDate(Long userId, LocalDate date);
 
     @Query("SELECT d.content FROM EmotionDiary d WHERE d.user.id = :userId ORDER BY d.date DESC")
     List<String> findRecentDiaries(@Param("userId") Long userId, Pageable pageable);
