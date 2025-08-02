@@ -33,8 +33,8 @@ public class MissionController {
             return ResponseEntity.status(401).build();
         }
 
-        List<String> keywords = missionService.generateMissionForToday(userDetails.getUser());
-        return ResponseEntity.ok(new MissionKeywordResponse(keywords));
+        MissionKeywordResponse response = missionService.generateMissionForToday(userDetails.getUser());
+        return ResponseEntity.ok(response);
     }
 
 
