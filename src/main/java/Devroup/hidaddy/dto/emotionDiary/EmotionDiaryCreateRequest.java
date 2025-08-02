@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.antlr.v4.runtime.misc.NotNull;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
@@ -17,7 +17,7 @@ public class EmotionDiaryCreateRequest {
     private String content;
 
     @NotNull
-    private LocalDateTime date;
+    private LocalDate date;
 
     private String imageUrl;
 }

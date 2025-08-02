@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface EmotionDiaryRepository extends JpaRepository<EmotionDiary, Integer> {
 
-    List<EmotionDiary> findAllByUserIdAndDateBetween(Long id, LocalDate start, LocalDate end);
+    List<EmotionDiary> findAllByUserIdAndDateBetweenOrderByDateAsc(Long id, LocalDate start, LocalDate end);
 
-    Optional<EmotionDiary> findByUserIdAndDate(User currentUser, LocalDate date);
+    Optional<EmotionDiary> findByUserIdAndDate(Long currentUser, LocalDate date);
 }
