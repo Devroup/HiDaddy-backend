@@ -82,7 +82,8 @@ public class MissionService {
 
 
         MissionKeywordResponse aiResponse = restTemplate.postForObject(
-            "http://3.36.201.162:6000/generate-mission",
+            // 로컬에서는 공인IP로, 배포환경에서는 localhost로 들어감
+            missionAiUrl + "/generate-mission",
             aiRequest,
             MissionKeywordResponse.class
         );
