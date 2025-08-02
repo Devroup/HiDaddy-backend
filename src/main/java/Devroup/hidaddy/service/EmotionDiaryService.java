@@ -32,8 +32,8 @@ public class EmotionDiaryService {
     }
 
     // 공통 조회 로직 실패 시 오류 발생
-    private EmotionDiary findDiaryOrThrow(Long currentUser, LocalDate date) {
-        return diaryRepository.findByUserIdAndDate(currentUser, date)
+    private EmotionDiary findDiaryOrThrow(Long userId, LocalDate date) {
+        return diaryRepository.findByUserIdAndDate(userId, date)
                 .orElseThrow(()-> new IllegalArgumentException("해당 날짜에 작성된 감정일기가 없습니다."));
     }
 
@@ -62,7 +62,6 @@ public class EmotionDiaryService {
     }
 
     // 감정일기 수정 (update)
-
     public EmotionDiaryResponse updateEmotionDiary(
             User currentUser,
             LocalDate date,
