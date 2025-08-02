@@ -26,7 +26,7 @@ public class MissionController {
 
     private final MissionService missionService;
 
-    @GetMapping("/keywords")
+    @GetMapping("/")
     public ResponseEntity<MissionKeywordResponse> generateTodayMission(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
