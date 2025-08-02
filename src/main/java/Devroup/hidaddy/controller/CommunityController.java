@@ -1,4 +1,4 @@
-package Devroup.hidaddy.controller.community;
+package Devroup.hidaddy.controller;
 
 import Devroup.hidaddy.dto.community.*;
 import Devroup.hidaddy.entity.User;
