@@ -32,18 +32,8 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)  // CORS 비활성화
                 .formLogin(AbstractHttpConfigurer::disable)  // 폼 로그인 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)  // HTTP Basic 인증 비활성화
-                // ① Swagger / OpenAPI 경로는 모두 인증 없이 허용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/swagger-resources/**",
-                        "/webjars/**"
-                        ).permitAll()
-
-                        // ② 그 외는 모두 인증 필요
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()  // 모든 요청 허용
                 )
 
                 // 비인증 요청 시 401 JSON 반환
