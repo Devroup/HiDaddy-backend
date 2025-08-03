@@ -1,7 +1,6 @@
 package Devroup.hidaddy.controller;
 
-import Devroup.hidaddy.dto.mission.MissionLogResponse;
-import Devroup.hidaddy.dto.mission.MissionResponse;
+import Devroup.hidaddy.dto.mission.*;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import Devroup.hidaddy.service.MissionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(
         name = "Mission",
@@ -25,6 +25,18 @@ import java.util.List;
 public class MissionController {
 
     private final MissionService missionService;
+
+    @GetMapping("/")
+    public ResponseEntity<MissionKeywordResponse> generateTodayMission(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        MissionKeywordResponse response = missionService.generateMissionForToday(userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("")
     @Operation(

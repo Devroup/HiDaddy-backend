@@ -9,11 +9,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "emotion_diary")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        name = "emotion_diary",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "date"})
+        }
+)
 public class EmotionDiary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

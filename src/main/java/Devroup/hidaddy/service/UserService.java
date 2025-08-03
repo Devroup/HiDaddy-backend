@@ -2,6 +2,7 @@ package Devroup.hidaddy.service;
 
 import Devroup.hidaddy.dto.user.*;
 import Devroup.hidaddy.entity.Baby;
+import Devroup.hidaddy.entity.BabyComment;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.repository.user.*;
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
     private final S3Uploader s3Uploader;
-
+    private final BabyCommentRepository babyCommentRepository;
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
 
@@ -154,8 +157,23 @@ public class UserService {
                         currentUser.getId()
                 )
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
+        
+        int currentWeek = calculateCurrentWeek(baby.getDueDate().toLocalDate());
 
-        return SelectedBabyResponse.from(baby);
+        // 주차별 코멘트 조회
+        String comment = babyCommentRepository
+                .findByWeekStartLessThanEqualAndWeekEndGreaterThanEqual(currentWeek, currentWeek)
+                .map(BabyComment::getComment)
+                .orElse("등록된 코멘트가 없습니다.");
+
+        return SelectedBabyResponse.from(baby, comment);
+    }
+
+    // 현재 주차 계산 (예정일 기준)
+    private int calculateCurrentWeek(LocalDate dueDate) {
+        long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
+        int weeksUntilDue = (int) Math.ceil(daysUntilDue / 7.0);  // 남은 주수
+        return 40 - weeksUntilDue; // 임신 40주 기준 현재 주차
     }
 
     @Transactional
