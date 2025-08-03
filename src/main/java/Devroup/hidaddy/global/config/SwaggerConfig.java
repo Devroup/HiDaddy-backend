@@ -6,8 +6,11 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
@@ -27,7 +30,13 @@ public class SwaggerConfig {
                 .in(SecurityScheme.In.HEADER)
                 .name("Authorization");
 
+        // 서버 정보 추가 - HTTPS 강제
+        Server httpsServer = new Server()
+                .url("https://devroup.com")
+                .description("Production server (HTTPS)");
+
         return new OpenAPI()
+                .servers(List.of(httpsServer))  // 이 줄이 핵심!
                 .components(new Components().addSecuritySchemes("bearerAuth", securityScheme))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .info(info);
