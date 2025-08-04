@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.util.List;
 import java.util.Map;
@@ -25,18 +28,6 @@ import java.util.Map;
 public class MissionController {
 
     private final MissionService missionService;
-
-    @GetMapping("/")
-    public ResponseEntity<MissionKeywordResponse> generateTodayMission(
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        MissionKeywordResponse response = missionService.generateMissionForToday(userDetails.getUser());
-        return ResponseEntity.ok(response);
-    }
-
 
     @GetMapping("")
     @Operation(
@@ -78,5 +69,29 @@ public class MissionController {
 
         MissionResponse missionDetail = missionService.getMissionDetail(missionId);
         return ResponseEntity.ok(missionDetail);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<MissionKeywordResponse> generateTodayMission(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        MissionKeywordResponse response = missionService.generateMissionForToday(userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(value = "/{missionId}/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MissionAIResponse> analyzeMission(
+        @PathVariable Long missionId,
+        @RequestPart(value = "image", required = false) MultipartFile image,
+        @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        MissionAIResponse result = missionService.analyzeMissionPhoto(missionId, image, userDetails.getUser());
+        return ResponseEntity.ok(result);
     }
 } 
