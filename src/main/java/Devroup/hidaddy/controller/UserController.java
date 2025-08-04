@@ -80,7 +80,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
     @PostMapping("/baby")
-    public ResponseEntity<List<BabyResponse>> registerBaby(
+    public ResponseEntity<BabyRegisterResponse> registerBaby(
             @RequestBody BabyRegisterListRequest requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -88,7 +88,8 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        List<BabyResponse> response = babyService.registerBaby(requestDto, userDetails.getUser());
+        List<BabyResponse> babies = babyService.registerBaby(requestDto, userDetails.getUser());
+        BabyRegisterResponse response = new BabyRegisterResponse(requestDto.getUserName(), babies);
         return ResponseEntity.ok(response);
     }
 
@@ -210,7 +211,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    public ResponseEntity<MessageResponse> uploadProfileImage(
+    public ResponseEntity<ProfileImageResponse> uploadProfileImage(
             @RequestPart(value = "image", required = true) MultipartFile image,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -219,7 +220,7 @@ public class UserController {
         }
 
         String imageUrl = userService.uploadProfileImage(userDetails.getUser(), image);
-        return ResponseEntity.ok(new MessageResponse(imageUrl));
+        return ResponseEntity.ok(new ProfileImageResponse(imageUrl));
     }
 
     @Operation(
