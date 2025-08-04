@@ -79,18 +79,17 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "아기 정보 등록 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-
     @PostMapping("/baby")
-    public ResponseEntity<?> registerBaby(
-            @RequestBody BabyRegisterRequest requestDto,
+    public ResponseEntity<List<BabyResponse>> registerBaby(
+            @RequestBody BabyRegisterListRequest requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
+            return ResponseEntity.status(401).build();
         }
 
-        userService.registerBaby(requestDto, userDetails.getUser());
-        return ResponseEntity.ok("아기 정보 등록 완료");
+        List<BabyResponse> response = babyService.registerBaby(requestDto, userDetails.getUser());
+        return ResponseEntity.ok(response);
     }
 
     // 전체 아기 목록 조회
@@ -170,15 +169,15 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping("/baby/basic")
-    public ResponseEntity<BabyResponse> registerBabySimple(
-            @RequestBody BabyBasicRegisterRequest request,
+    public ResponseEntity<List<BabyResponse>> registerBabySimple(
+            @RequestBody BabyBasicRegisterListRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        BabyResponse response = babyService.registerBabyBasic(request, userDetails.getUser());
+        List<BabyResponse> response = babyService.registerBabyBasic(request.getBabies(), userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 

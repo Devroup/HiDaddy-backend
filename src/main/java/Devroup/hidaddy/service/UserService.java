@@ -33,24 +33,6 @@ public class UserService {
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
 
-    public void registerBaby(BabyRegisterRequest dto, User user) {
-        // 유저 이름 업데이트
-        user.setName(dto.getUserName());
-
-        // 아기 생성
-        Baby baby = Baby.builder()
-                .name(dto.getBabyName())
-                .dueDate(dto.getParsedDueDate())
-                .user(user)
-                .build();
-
-        babyRepository.save(baby);
-
-        // 선택된 아기 ID 설정
-        user.setSelectedBabyId(baby.getId());
-        userRepository.save(user);
-    }
-
     public BabyResponse changeSelectedBaby(User user, Long babyId) {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));

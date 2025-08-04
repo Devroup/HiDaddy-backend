@@ -1,5 +1,6 @@
 package Devroup.hidaddy.controller;
 
+import Devroup.hidaddy.dto.auth.AuthResponse;
 import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.jwt.JwtUtil;
@@ -70,10 +71,10 @@ public class AuthController {
             summary = "소셜 로그인 처리 (Access/Refresh Token 전달)",
             description = "구글, 카카오, 네이버 OAuth 2.0 인증 코드로 자체 Access/Refresh Token을 발급합니다."
     )
-    @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content)
-    @ApiResponse(responseCode = "400", description = "토큰 교환 실패 또는 Provider 오류", content = @Content)
+    @ApiResponse(responseCode = "200", description = "로그인 성공")
+    @ApiResponse(responseCode = "400", description = "토큰 교환 실패 또는 Provider 오류")
     @PostMapping("/tokens")
-    public ResponseEntity<?> oauth2Callback(
+    public ResponseEntity<AuthResponse> oauth2Callback(
             @Parameter(description = "SNS 제공자(google, kakao, naver)와 Authorization Code") @RequestBody AuthRequest requestDto) {
         String provider = requestDto.getProvider();
         String code = requestDto.getCode();
@@ -94,15 +95,17 @@ public class AuthController {
                     null, email, null, null, provider.toUpperCase(), socialId
             );
 
-            return ResponseEntity.ok(Map.of(
-                    "accessToken", tokens.get("accessToken"),
-                    "refreshToken", tokens.get("refreshToken"),
-                    "signed", !(Boolean) tokens.get("isNewUser"),  // 기존 유저면 true
-                    "message", "로그인 성공"
-            ));
+            AuthResponse response = new AuthResponse(
+                    (String) tokens.get("accessToken"),
+                    (String) tokens.get("refreshToken"),
+                    !(Boolean) tokens.get("isNewUser"),
+                    "로그인 성공"
+            );
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "소셜 로그인 처리 중 오류 발생", "error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
