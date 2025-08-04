@@ -1,12 +1,10 @@
 package Devroup.hidaddy.controller;
 
-import Devroup.hidaddy.dto.auth.AuthResponse;
+import Devroup.hidaddy.dto.auth.*;
+import Devroup.hidaddy.dto.user.MessageResponse;
 import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.jwt.JwtUtil;
-import Devroup.hidaddy.dto.auth.AuthRequest;
-import Devroup.hidaddy.dto.auth.LogoutRequest;
-import Devroup.hidaddy.dto.auth.RefreshTokenRequest;
 import Devroup.hidaddy.repository.auth.RefreshTokenRepository;
 import Devroup.hidaddy.repository.user.UserRepository;
 import Devroup.hidaddy.security.UserDetailsImpl;
@@ -46,25 +44,23 @@ public class AuthController {
             summary = "Access Token 재발급",
             description = "만료된 Access Token을 Refresh Token을 사용하여 새로 발급합니다."
     )
-    @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공", content = @Content)
-    @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 Refresh Token", content = @Content)
+    @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공")
+    @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 Refresh Token")
     @PostMapping("/renew")
-    public ResponseEntity<?> refreshAccessToken(
+    public ResponseEntity<RenewResponse> refreshAccessToken(
             @Parameter(description = "리프레시 토큰 요청 DTO") @RequestBody RefreshTokenRequest requestDto) {
         String refreshToken = requestDto.getRefreshToken();
         RefreshToken foundToken = refreshTokenRepository.findByToken(refreshToken).orElse(null);
 
         if (foundToken == null || foundToken.getExpiredAt().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않거나 만료된 리프레시 토큰");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         User user = userRepository.findById(foundToken.getUser().getId()).orElseThrow();
         String newAccessToken = jwtUtil.createAccessToken(user);
 
-        return ResponseEntity.ok(Map.of(
-                "accessToken", newAccessToken,
-                "message", "Access Token 재발급 완료"
-        ));
+        RenewResponse response = new  RenewResponse(newAccessToken, "Access Token 재발급 완료");
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
@@ -113,9 +109,9 @@ public class AuthController {
             summary = "로그아웃",
             description = "사용자의 Refresh Token을 삭제하여 세션을 무효화합니다."
     )
-    @ApiResponse(responseCode = "200", description = "로그아웃 성공", content = @Content)
+    @ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(
+    public ResponseEntity<MessageResponse> logout(
             @Parameter(description = "로그아웃할 사용자의 Refresh Token") @RequestBody LogoutRequest logoutDto) {
         String refreshToken = logoutDto.getRefreshToken();
 
@@ -124,7 +120,7 @@ public class AuthController {
                     .ifPresent(refreshTokenRepository::delete);
         }
 
-        return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
+        return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
 
     @Operation(summary = "회원 탈퇴",
@@ -134,8 +130,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
     @DeleteMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<MessageResponse> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         userService.deleteUser(userDetails.getUser());
-        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+        return ResponseEntity.ok(new MessageResponse("회원 탈퇴가 완료되었습니다."));
     }
 }

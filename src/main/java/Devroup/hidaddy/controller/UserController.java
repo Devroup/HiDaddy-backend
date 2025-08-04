@@ -60,16 +60,16 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "유저 이름 변경 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<?> changeName(
+    public ResponseEntity<MessageResponse> changeName(
             @RequestBody ChangeUserNameRequest requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
+            return ResponseEntity.status(401).body(new MessageResponse("인증이 필요합니다."));
         }
 
         userService.changeUserName(userDetails.getUser(), requestDto.getUserName());
-        return ResponseEntity.ok("유저 이름 변경 완료");
+        return ResponseEntity.ok(new MessageResponse("유저 이름 변경 완료"));
     }
 
     // 아기 등록 (튜토리얼)
@@ -155,11 +155,11 @@ public class UserController {
     // 아기 삭제
     @Operation(summary = "아기 삭제", description = "지정된 아기 정보를 삭제합니다.")
     @DeleteMapping("/baby/{babyId}")
-    public ResponseEntity<String> deleteBaby(@PathVariable Long babyId,
+    public ResponseEntity<MessageResponse> deleteBaby(@PathVariable Long babyId,
                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) return ResponseEntity.status(401).build();
         babyService.deleteBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok("아기 삭제 완료");
+        return ResponseEntity.ok(new MessageResponse("아기 삭제 완료"));
     }
 
     @Operation(summary = "아기 정보 등록", description = "태명과 출산 예정일만 입력하여 아기를 등록합니다.")
@@ -189,10 +189,10 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "해당 아기 정보를 찾을 수 없음")
     })
     @PatchMapping("/select-baby/{babyId}")
-    public ResponseEntity<?> selectBaby(@PathVariable Long babyId,
+    public ResponseEntity<BabyResponse> selectBaby(@PathVariable Long babyId,
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
+            return ResponseEntity.status(401).build();
         }
 
         BabyResponse response = userService.changeSelectedBaby(userDetails.getUser(), babyId);
@@ -210,16 +210,16 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    public ResponseEntity<String> uploadProfileImage(
+    public ResponseEntity<MessageResponse> uploadProfileImage(
             @RequestPart(value = "image", required = true) MultipartFile image,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
+            return ResponseEntity.status(401).build();
         }
 
         String imageUrl = userService.uploadProfileImage(userDetails.getUser(), image);
-        return ResponseEntity.ok(imageUrl);
+        return ResponseEntity.ok(new MessageResponse(imageUrl));
     }
 
     @Operation(
@@ -236,9 +236,9 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
     })
     @PatchMapping("/phone")
-    public ResponseEntity<String> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
+    public ResponseEntity<MessageResponse> patchPhoneNumbers(@AuthenticationPrincipal UserDetailsImpl userDetails,
                                                   @RequestBody PhoneUpdateRequest dto) {
         userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
-        return ResponseEntity.ok("전화번호가 성공적으로 변경되었습니다.");
+        return ResponseEntity.ok(new MessageResponse("전화번호가 성공적으로 변경되었습니다."));
     }
 }
