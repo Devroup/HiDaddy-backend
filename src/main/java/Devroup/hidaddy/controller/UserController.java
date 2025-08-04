@@ -79,7 +79,6 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "아기 정보 등록 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-
     @PostMapping("/baby")
     public ResponseEntity<?> registerBaby(
             @RequestBody BabyRegisterRequest requestDto,
@@ -89,7 +88,7 @@ public class UserController {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        userService.registerBaby(requestDto, userDetails.getUser());
+        babyService.registerBaby(requestDto, userDetails.getUser());
         return ResponseEntity.ok("아기 정보 등록 완료");
     }
 
