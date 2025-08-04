@@ -2,13 +2,11 @@ package Devroup.hidaddy.dto.user;
 
 import Devroup.hidaddy.entity.Baby;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
 @Getter
-@NoArgsConstructor
 public class BabyResponse {
     private Long id;
     private String name;

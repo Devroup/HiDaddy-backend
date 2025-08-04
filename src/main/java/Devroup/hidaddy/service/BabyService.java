@@ -1,6 +1,6 @@
 package Devroup.hidaddy.service;
 
-import Devroup.hidaddy.dto.user.BabyBasicRegisterRequest;
+import Devroup.hidaddy.dto.user.BabyRegisterListRequest;
 import Devroup.hidaddy.dto.user.BabyRegisterRequest;
 import Devroup.hidaddy.dto.user.BabyResponse;
 import Devroup.hidaddy.dto.user.BabyUpdateRequest;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,44 +65,68 @@ public class BabyService {
         babyRepository.delete(baby);
     }
 
-    public void registerBaby(BabyRegisterRequest dto, User user) {
-        // 유저 이름 업데이트
-        user.setName(dto.getUserName());
-        LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
+    public List<BabyResponse> registerBabyBasic(List<BabyRegisterRequest> babies, User user) {
 
-        // 아기 생성
-        Baby baby = Baby.builder()
-                .name(dto.getBabyName())
-                .dueDate(parsedDueDate)
-                .user(user)
-                .build();
+        List<BabyResponse> responses = new ArrayList<>();
 
-        babyRepository.save(baby);
+        for (int i = 0; i < babies.size(); i++) {
+            BabyRegisterRequest dto = babies.get(i);
+            LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
 
-        // 선택된 아기 ID 설정
-        user.setSelectedBabyId(baby.getId());
-        userRepository.save(user);
+            Baby baby = Baby.builder()
+                    .name(dto.getBabyName())
+                    .dueDate(parsedDueDate)
+                    .user(user)
+                    .build();
+
+            babyRepository.save(baby);
+            responses.add(new BabyResponse(baby));
+
+            // 첫 번째 아기를 선택된 아기로 설정
+            if (i == 0) {
+                user.setSelectedBabyId(baby.getId());
+            }
+        }
+
+        userRepository.save(user); // 변경된 selectedBabyId 저장
+
+        return responses;
     }
 
-    @Transactional
-    public BabyResponse registerBabyBasic(BabyBasicRegisterRequest dto, User user) {
-        LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
+    public List<BabyResponse> registerBaby(BabyRegisterListRequest request, User user) {
+        List<BabyRegisterRequest> babyList = request.getBabies();
 
-        // 아기 생성
-        Baby baby = Baby.builder()
-                .name(dto.getBabyName())
-                .dueDate(parsedDueDate)
-                .user(user)
-                .build();
+        if (babyList == null || babyList.isEmpty()) {
+            throw new IllegalArgumentException("최소 한 명 이상의 아기 정보가 필요합니다.");
+        }
 
-        // 저장
-        babyRepository.save(baby);
+        // 유저 이름 설정
+        user.setName(request.getUserName());
 
-        // 선택된 아기로 지정
-        user.setSelectedBabyId(baby.getId());
-        userRepository.save(user);
+        List<BabyResponse> responses = new ArrayList<>();
 
-        return new BabyResponse(baby);
+        for (int i = 0; i < babyList.size(); i++) {
+            BabyRegisterRequest dto = babyList.get(i);
+            LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
+
+            Baby baby = Baby.builder()
+                    .name(dto.getBabyName())
+                    .dueDate(parsedDueDate)
+                    .user(user)
+                    .build();
+
+            babyRepository.save(baby);
+            responses.add(new BabyResponse(baby));
+
+            // 첫 번째 아기를 선택된 아기로 지정
+            if (i == 0) {
+                user.setSelectedBabyId(baby.getId());
+            }
+        }
+
+        userRepository.save(user); // 선택된 아기 ID 저장
+
+        return responses;
     }
 
     private LocalDateTime parseDueDate(String dueDate) {
