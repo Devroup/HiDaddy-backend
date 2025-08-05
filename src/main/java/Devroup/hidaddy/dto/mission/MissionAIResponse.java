@@ -10,8 +10,8 @@ import lombok.Getter;
 public class MissionAIResponse {
     private String result; // "PASS" 또는 "FAIL"
     private String reason; // 판독 사유
-    private String keyword1;
-    private String keyword2;
-    private String keyword3;
+    private Boolean keyword1;
+    private Boolean keyword2;
+    private Boolean keyword3;
     private String imageUrl;
 }

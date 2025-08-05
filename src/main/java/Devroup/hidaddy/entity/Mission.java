@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,10 @@ public class Mission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     private String title;
@@ -34,6 +39,9 @@ public class Mission {
 
     @Column(name = "keyword3")
     private String keyword3;
+
+    @Column(name = "date")
+    private LocalDate date;  // 오늘 미션 구분용
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
