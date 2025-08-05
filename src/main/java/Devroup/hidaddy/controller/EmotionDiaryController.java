@@ -10,9 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.XSlf4j;
 import org.springframework.cglib.core.Local;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.time.LocalDate;
@@ -21,20 +23,27 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/emotion-diaries")
 @RequiredArgsConstructor
-@Tag(name = "Emotion-Diary", description = "감정일기 API")
+@Tag(name = "Emotion-Diary", description = "감Z정일기 API")
 public class EmotionDiaryController {
     private final EmotionDiaryService emotionDiaryService;
 
     // 감정일기 생성 (create)
     @Operation(summary = "감정일기 생성", description = "특정 날짜의 감정일기를 생성합니다.")
-    @PostMapping
-    public ResponseEntity<Void> createEmotionDiary(
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EmotionDiaryResponse> createEmotionDiary(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody EmotionDiaryCreateRequest dto
+            @RequestParam("content") String content,
+            @RequestParam (value = "date", required = false) String dateString,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        User currentUser = userDetails.getUser();
-        emotionDiaryService.create(dto, currentUser);
-        return ResponseEntity.ok().build();
+        LocalDate date;
+        if (dateString == null || dateString.trim().isEmpty()) {
+            date = LocalDate.now();
+        } else {
+            date = LocalDate.parse(dateString);
+        }
+        EmotionDiaryCreateRequest dto = new EmotionDiaryCreateRequest(content, date);
+        return ResponseEntity.ok(emotionDiaryService.create(dto, image, userDetails.getUser()));
     }
 
     // 감정일기 조회 (read)
@@ -66,14 +75,17 @@ public class EmotionDiaryController {
 
     // 감정일기 수정 (update)
     @Operation(summary = "특정 감정일기 수정", description = "해당하는 날짜의 감정일기를 수정합니다.")
-    @PutMapping("/{date}")
+    @PutMapping(value ="/{date}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EmotionDiaryResponse> updateEmotionDiary(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestBody EmotionDiaryUpdateRequest request
+            @RequestParam("content") String content,
+            @RequestPart(value = "image", required = false) MultipartFile image
+
     ) {
         User currentUser = userDetails.getUser();
-        EmotionDiaryResponse response = emotionDiaryService.updateEmotionDiary(currentUser, date, request);
+        EmotionDiaryUpdateRequest request = new EmotionDiaryUpdateRequest(content);
+        EmotionDiaryResponse response = emotionDiaryService.updateEmotionDiary(currentUser, date, request, image);
         return ResponseEntity.ok(response);
     }
 

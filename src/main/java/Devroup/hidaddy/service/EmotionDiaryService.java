@@ -4,10 +4,12 @@ import Devroup.hidaddy.dto.emotionDiary.*;
 import Devroup.hidaddy.entity.EmotionDiary;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.repository.emotionDiary.*;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import Devroup.hidaddy.util.S3Uploader;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,19 +18,28 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class EmotionDiaryService {
-
+    private final S3Uploader s3Uploader;
     private final EmotionDiaryRepository diaryRepository;
+    @Value("${cloudfront.domain}")
+    private String cloudFrontDomain;
 
-    public void create(EmotionDiaryCreateRequest dto, User currentUser) {
+    public EmotionDiaryResponse create(EmotionDiaryCreateRequest dto, MultipartFile image, User currentUser) {
         LocalDate dataToSave = (dto.getDate() == null) ? LocalDate.now() : dto.getDate();
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Uploader.upload(image, "emotionDiary");
+            imageUrl = cloudFrontDomain + "/" + imageUrl;
+        }
+
         EmotionDiary diary = EmotionDiary.builder()
                 .user(currentUser)
                 .content(dto.getContent())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(imageUrl)
                 .date(dataToSave)
                 .build();
 
         diaryRepository.save(diary);
+        return EmotionDiaryResponse.from(diary);
     }
 
     // 공통 조회 로직 실패 시 오류 발생
@@ -65,10 +76,23 @@ public class EmotionDiaryService {
     public EmotionDiaryResponse updateEmotionDiary(
             User currentUser,
             LocalDate date,
-            EmotionDiaryUpdateRequest dto
+            EmotionDiaryUpdateRequest dto,
+            MultipartFile image
     ) {
         EmotionDiary diary = findDiaryOrThrow(currentUser.getId(), date);
-        diary.update(dto.getContent(), dto.getImageUrl());
+        diary.update(dto.getContent());
+
+        if (image != null && !image.isEmpty()) {
+            // 기존 이미지 삭제
+            if (diary.getImageUrl() != null && !diary.getImageUrl().isEmpty()) {
+                String imageKey = diary.getImageUrl().replace(cloudFrontDomain + "/", "");
+                s3Uploader.delete(imageKey);
+            }
+            // 새 이미지 업로드
+            String imageUrl = s3Uploader.upload(image, "emotionDiary");
+            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            diary.setImageUrl(imageUrl);
+        }
 
         return EmotionDiaryResponse.from(diary);
     }
