@@ -54,10 +54,13 @@ public class EmotionDiary {
         updatedAt = LocalDateTime.now();
     }
 
-    public void update(String content, String imageUrl)
+    public void update(String content)
     {
         this.content = content;
-        this.imageUrl = imageUrl;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

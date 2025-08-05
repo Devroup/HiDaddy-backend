@@ -11,6 +11,4 @@ import lombok.NoArgsConstructor;
 @Builder    
 public class EmotionDiaryUpdateRequest {
     private String content;
-
-    private String imageUrl;
 }

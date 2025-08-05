@@ -18,6 +18,4 @@ public class EmotionDiaryCreateRequest {
 
     @NotNull
     private LocalDate date;
-
-    private String imageUrl;
 }
