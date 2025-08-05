@@ -9,13 +9,13 @@ public class UserResponse {
     private String phone;
     private String partnerPhone;
     private String profileImageUrl;
-    private String selectedBabyName;
+    private String email;
 
-    public UserResponse(User user, String selectedBabyName) {
+    public UserResponse(User user) {
         this.userName = user.getName();
         this.partnerPhone = user.getPartnerPhone();
         this.phone = user.getPhone();
         this.profileImageUrl = user.getProfileImageUrl();
-        this.selectedBabyName = selectedBabyName;  // BabyRepository로 가져온 이름
+        this.email = user.getEmail();  // BabyRepository로 가져온 이름
     }
 }

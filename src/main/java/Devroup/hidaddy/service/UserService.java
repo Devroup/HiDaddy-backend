@@ -119,14 +119,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String babyName = null;
-        if (user.getSelectedBabyId() != null) {
-            babyName = babyRepository.findById(user.getSelectedBabyId())
-                    .map(Baby::getName)
-                    .orElse(null);
-        }
-
-        return new UserResponse(user, babyName);
+        return new UserResponse(user);
     }
 
     public SelectedBabyResponse getSelectedBabyInfo(User currentUser) {
