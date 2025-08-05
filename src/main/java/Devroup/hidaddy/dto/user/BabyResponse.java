@@ -12,10 +12,14 @@ public class BabyResponse {
     private String name;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // 날짜 포맷 지정
     private LocalDate dueDate;
+    private Long babyGroupId;
+    private boolean isTwin;
 
-    public BabyResponse(Baby baby) {
+    public BabyResponse(Baby baby, boolean isTwin) {
         this.id = baby.getId();
         this.name = baby.getName();
         this.dueDate = baby.getDueDate().toLocalDate();
+        this.babyGroupId = baby.getBabyGroup().getId();
+        this.isTwin = isTwin;
     }
 }

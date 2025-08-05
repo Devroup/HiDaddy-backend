@@ -35,4 +35,8 @@ public class Baby {
     }
 
     private String babyImageUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "baby_group_id")
+    private BabyGroup babyGroup;  // null 가능 (단일 아이인 경우)
 }

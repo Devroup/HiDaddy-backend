@@ -88,7 +88,7 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        List<BabyResponse> babies = babyService.registerBaby(requestDto, userDetails.getUser());
+        List<BabyResponse> babies = babyService.registerBabyGroupTutorial(requestDto, userDetails.getUser());
         BabyRegisterResponse response = new BabyRegisterResponse(requestDto.getUserName(), babies);
         return ResponseEntity.ok(response);
     }
@@ -131,36 +131,36 @@ public class UserController {
         return ResponseEntity.ok(selectedBabyInfo);
     }
 
-    // 아기 수정 (이름, 날짜, 이미지)
-    @PatchMapping("/baby/{babyId}")
+    // 아기 수정 (이름, 날짜)
+    @PatchMapping("/baby/{groupId}")
     @Operation(summary = "아기 정보 수정", description = "지정된 아기의 이름, 출산 예정일 등을 수정합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<BabyResponse> updateBaby(
-            @PathVariable Long babyId,
-            @RequestBody BabyUpdateRequest dto,
+    public ResponseEntity<List<BabyResponse>> updateBaby(
+            @PathVariable Long groupId,
+            @RequestBody List<BabyUpdateRequest> updates,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        BabyResponse response = babyService.updateBaby(userDetails.getUser(), babyId, dto);
+        if (userDetails == null) return ResponseEntity.status(401).build();
+        List<BabyResponse> response = babyService.updateBabyGroup(groupId, updates);
         return ResponseEntity.ok(response);
     }
 
 
     // 아기 삭제
     @Operation(summary = "아기 삭제", description = "지정된 아기 정보를 삭제합니다.")
-    @DeleteMapping("/baby/{babyId}")
-    public ResponseEntity<MessageResponse> deleteBaby(@PathVariable Long babyId,
-                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    @DeleteMapping("/baby/{groupId}")
+    public ResponseEntity<MessageResponse> deleteBabyp(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
         if (userDetails == null) return ResponseEntity.status(401).build();
-        babyService.deleteBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok(new MessageResponse("아기 삭제 완료"));
+
+        babyService.deleteBabyGroup(userDetails.getUser(), groupId);
+        return ResponseEntity.ok(new MessageResponse("아기 그룹 삭제 완료"));
     }
 
     @Operation(summary = "아기 정보 등록", description = "태명과 출산 예정일만 입력하여 아기를 등록합니다.")
@@ -178,7 +178,7 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        List<BabyResponse> response = babyService.registerBabyBasic(request.getBabies(), userDetails.getUser());
+        List<BabyResponse> response = babyService.registerBabyGroup(request.getBabies(), userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 
@@ -189,15 +189,17 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "404", description = "해당 아기 정보를 찾을 수 없음")
     })
-    @PatchMapping("/select-baby/{babyId}")
-    public ResponseEntity<BabyResponse> selectBaby(@PathVariable Long babyId,
-                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    @PatchMapping("/select-baby-group/{groupId}")
+    public ResponseEntity<SelectedBabyResponse> selectBabyGroup(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        BabyResponse response = userService.changeSelectedBaby(userDetails.getUser(), babyId);
-        return ResponseEntity.ok(response);
+        SelectedBabyResponse selectedBabyResponse = userService.changeSelectedBabyGroup(userDetails.getUser(), groupId);
+        return ResponseEntity.ok(selectedBabyResponse);
     }
 
     @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
