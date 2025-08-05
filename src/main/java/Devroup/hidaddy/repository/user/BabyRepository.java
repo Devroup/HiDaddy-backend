@@ -17,4 +17,6 @@ public interface BabyRepository extends JpaRepository<Baby, Long> {
     Optional<Baby> findByIdAndUserId(Long babyId, Long userId);
 
     Optional<Baby> findById(Long babyId);
+
+    List<Baby> findAllByUser(User user);
 }

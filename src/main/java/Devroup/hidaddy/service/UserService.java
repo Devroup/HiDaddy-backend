@@ -1,10 +1,7 @@
 package Devroup.hidaddy.service;
 
 import Devroup.hidaddy.dto.user.*;
-import Devroup.hidaddy.entity.Baby;
-import Devroup.hidaddy.entity.BabyComment;
-import Devroup.hidaddy.entity.User;
-import Devroup.hidaddy.entity.RefreshToken;
+import Devroup.hidaddy.entity.*;
 import Devroup.hidaddy.repository.user.*;
 import Devroup.hidaddy.repository.auth.*;
 import Devroup.hidaddy.jwt.JwtUtil;
@@ -12,11 +9,13 @@ import Devroup.hidaddy.util.S3Uploader;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.LocalDate;
@@ -30,22 +29,44 @@ public class UserService {
     private final BabyRepository babyRepository;
     private final S3Uploader s3Uploader;
     private final BabyCommentRepository babyCommentRepository;
+    private final BabyGroupRepository babyGroupRepository;
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
 
-    public BabyResponse changeSelectedBaby(User user, Long babyId) {
-        Baby baby = babyRepository.findById(babyId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 아기를 찾을 수 없습니다."));
+    public SelectedBabyResponse changeSelectedBabyGroup(User user, Long groupId) {
+        BabyGroup babyGroup = babyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("아기 그룹을 찾을 수 없습니다."));
 
-        // 본인의 아기인지 확인
-        if (!baby.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("본인의 아기만 선택할 수 있습니다.");
+        boolean isUserGroup = babyGroup.getBabies().stream()
+                .anyMatch(b -> b.getUser().getId().equals(user.getId()));
+        if (!isUserGroup) {
+            throw new IllegalArgumentException("선택한 아기 그룹에 대한 권한이 없습니다.");
         }
 
-        user.setSelectedBabyId(babyId);
+        // 선택된 아기 그룹으로 업데이트
+        user.setSelectedBabyId(groupId);
         userRepository.save(user);
 
-        return new BabyResponse(baby);
+        List<Baby> babies = babyGroup.getBabies();
+        boolean isTwin = babies.size() == 2;
+
+        Baby baseBaby = babies.get(0);
+        int currentWeek = calculateCurrentWeek(baseBaby.getDueDate().toLocalDate());
+
+        String comment = babyCommentRepository
+                .findByWeekStartLessThanEqualAndWeekEndGreaterThanEqual(currentWeek, currentWeek)
+                .map(BabyComment::getComment)
+                .orElse("등록된 코멘트가 없습니다.");
+
+        List<BabyResponse> babyResponses = babies.stream()
+                .map(baby -> new BabyResponse(baby, isTwin))
+                .toList();
+
+        return SelectedBabyResponse.builder()
+                .babies(babyResponses)
+                .comment(comment)
+                .dDay(SelectedBabyResponse.formatDday(baseBaby.getDueDate().toLocalDate()))
+                .build();
     }
 
     public void changeUserName(User user, String userName) {
@@ -123,26 +144,46 @@ public class UserService {
     }
 
     public SelectedBabyResponse getSelectedBabyInfo(User currentUser) {
-        Long selectedBabyId = currentUser.getSelectedBabyId();
-        if(selectedBabyId == null)
-            throw new IllegalArgumentException("선택된 아이가 없습니다.");
+        Long selectedGroupId = currentUser.getSelectedBabyId();
+        if (selectedGroupId == null) {
+            throw new IllegalArgumentException("선택된 아기 그룹이 없습니다.");
+        }
 
-        Baby baby = babyRepository.findByIdAndUserId(
-                        currentUser.getSelectedBabyId(),
-                        currentUser.getId()
-                )
-                .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
-        
-        int currentWeek = calculateCurrentWeek(baby.getDueDate().toLocalDate());
+        // 그룹 ID로 BabyGroup 조회
+        BabyGroup group = babyGroupRepository.findById(selectedGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
-        // 주차별 코멘트 조회
+        // 권한 검증
+        boolean isUserGroup = group.getBabies().stream()
+                .anyMatch(b -> b.getUser().getId().equals(currentUser.getId()));
+        if (!isUserGroup) {
+            throw new IllegalArgumentException("선택된 아기 그룹에 대한 권한이 없습니다.");
+        }
+
+        List<Baby> babies = group.getBabies();
+        boolean isTwin = babies.size() == 2;
+
+        // D-day 및 comment는 첫 번째 아기를 기준으로 설정
+        Baby baseBaby = babies.get(0);
+        int currentWeek = calculateCurrentWeek(baseBaby.getDueDate().toLocalDate());
+
         String comment = babyCommentRepository
                 .findByWeekStartLessThanEqualAndWeekEndGreaterThanEqual(currentWeek, currentWeek)
                 .map(BabyComment::getComment)
                 .orElse("등록된 코멘트가 없습니다.");
 
-        return SelectedBabyResponse.from(baby, comment);
+        List<BabyResponse> babyResponses = babies.stream()
+                .map(b -> new BabyResponse(b, isTwin))
+                .toList();
+
+        return SelectedBabyResponse.builder()
+                .babies(babyResponses)
+                .comment(comment)
+                .dDay(SelectedBabyResponse.formatDday(baseBaby.getDueDate().toLocalDate()))
+                .build();
     }
+
+
 
     // 현재 주차 계산 (예정일 기준)
     private int calculateCurrentWeek(LocalDate dueDate) {
