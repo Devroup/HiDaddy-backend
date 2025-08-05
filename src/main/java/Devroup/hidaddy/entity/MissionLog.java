@@ -29,12 +29,6 @@ public class MissionLog {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(nullable = false)
-    private String content;
-
-    @Column(nullable = false)
-    private String status;
-
     @Column(name = "keyword1_success")
     private Boolean keyword1Success;
 

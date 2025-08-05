@@ -17,6 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.web.multipart.MultipartFile;
+import Devroup.hidaddy.util.S3Uploader;
+import java.util.Optional;
+import java.util.Arrays;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,8 +37,13 @@ public class MissionService {
     private final EmotionDiaryRepository emotionDiaryRepository;
     private final BabyRepository babyRepository;
     private final WeeklyContentRepository WeeklyContentRepository;
+    private final S3Uploader s3Uploader;
 
-    @Value("${mission.ai.url:http://3.36.201.162/:6000}")
+    @Value("${cloudfront.domain}")
+    private String cloudFrontDomain;
+
+    // @Value("${mission.ai.url:http://localhost:6000}")
+    @Value("${spring.application.domain}")
     private String missionAiUrl;
 
     public List<MissionLogResponse> getMissionHistory(User user) {
@@ -44,14 +53,45 @@ public class MissionService {
                 .collect(Collectors.toList());
     }
 
-    public MissionResponse getMissionDetail(Long missionId) {
+    @Transactional
+    public MissionResponse getMissionDetail(Long missionId, User user) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 미션을 찾을 수 없습니다."));
-        return MissionResponse.from(mission);
+        
+        Optional<MissionLog> missionLogOpt = missionLogRepository.findByMissionIdAndUserId(missionId, user.getId());
+
+        Boolean keyword1Success = false;
+        Boolean keyword2Success = false;
+        Boolean keyword3Success = false;
+        String imageUrl = null;
+
+        if (missionLogOpt.isPresent()) {
+            MissionLog log = missionLogOpt.get();
+            keyword1Success = Boolean.TRUE.equals(log.getKeyword1Success());
+            keyword2Success = Boolean.TRUE.equals(log.getKeyword2Success());
+            keyword3Success = Boolean.TRUE.equals(log.getKeyword3Success());
+            imageUrl = log.getImageUrl();
+        }
+        
+        // MissionResponse 생성
+        return MissionResponse.builder()
+                .id(mission.getId())
+                .title(mission.getTitle())
+                .description(mission.getDescription())
+                .keyword1(mission.getKeyword1())
+                .keyword2(mission.getKeyword2())
+                .keyword3(mission.getKeyword3())
+                .keyword1Success(keyword1Success)
+                .keyword2Success(keyword2Success)
+                .keyword3Success(keyword3Success)
+                .imageUrl(imageUrl)
+                .createdAt(mission.getCreatedAt())
+                .build();
     }
 
     @Transactional
-    public MissionKeywordResponse generateMissionForToday(User currentUser) {
+    public MissionKeywordResponse getOrCreateTodayMission(User currentUser) {
+        // 아이와 유저 검증 로직
         Long selectedBabyId = currentUser.getSelectedBabyId();
         if(selectedBabyId == null)
             throw new IllegalArgumentException("선택된 아이가 없습니다.");
@@ -62,13 +102,35 @@ public class MissionService {
                 )
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
 
+        LocalDate today = LocalDate.now();
+
+        // 오늘 미션 존재 여부 확인 (이미 생성된 미션이 있으면 바로 반환)
+        Optional<Mission> existingMissionOpt = missionRepository.findByUserIdAndDate(currentUser.getId(), today);
+        if (existingMissionOpt.isPresent()) {
+            Mission existingMission = existingMissionOpt.get();
+
+            return MissionKeywordResponse.builder()
+                    .missionId(existingMission.getId())
+                    .title(existingMission.getTitle())
+                    .description(existingMission.getDescription())
+                    .keywords(Arrays.asList(
+                            existingMission.getKeyword1(),
+                            existingMission.getKeyword2(),
+                            existingMission.getKeyword3()
+                    ))
+                    .build();
+        }
+
+        // 오늘 미션이 없으면 새로 생성
         int currentWeek = calculateCurrentWeek(baby.getDueDate().toLocalDate());
 
+        // 최근 3개의 감정일기 가져오기
         List<String> diaries = emotionDiaryRepository.findRecentDiaries(
             currentUser.getId(),
-            PageRequest.of(0, 3) // 최근 3개만 가져오기
+            PageRequest.of(0, 3)
         );
-        
+
+        // 주차별 가이드 텍스트 생성
         String guideText = WeeklyContentRepository.findByWeek(currentWeek)
                 .map(content -> String.format(
                         "### 아기는 이렇게 자라고 있어요\n\n%s\n\n---\n\n### 아내의 몸도 변화하고 있어요\n\n%s\n\n---\n\n### 아기의 건강, 함께 지켜봐요\n\n%s",
@@ -78,12 +140,13 @@ public class MissionService {
                 ))
                 .orElse("해당 주차에 대한 정보가 없습니다.");
 
+        // AI 요청 DTO
         MissionKeywordRequest aiRequest = new MissionKeywordRequest(diaries, guideText);
 
-
+        // AI 서버 요청 -> 오늘 미션 생성
         MissionKeywordResponse aiResponse = restTemplate.postForObject(
             // 로컬에서는 공인IP로, 배포환경에서는 localhost로 들어감
-            missionAiUrl + "/generate-mission",
+            missionAiUrl + "/mission/generate-mission",
             aiRequest,
             MissionKeywordResponse.class
         );
@@ -92,16 +155,22 @@ public class MissionService {
             throw new RuntimeException("AI 응답에 키워드가 없습니다.");
         }
         
+        // Mission DB 저장
         Mission mission = Mission.builder()
                             .title(aiResponse.getTitle())
                             .description(aiResponse.getDescription())
                             .keyword1(aiResponse.getKeywords().get(0))
                             .keyword2(aiResponse.getKeywords().get(1))
                             .keyword3(aiResponse.getKeywords().get(2))
+                            .user(currentUser)
+                            .date(today)
                             .build();
         
         missionRepository.save(mission);
 
+        // 생성된 미션ID 응답에 저장
+        aiResponse.setMissionId(mission.getId());
+        
         return aiResponse;
     }
 
@@ -110,5 +179,76 @@ public class MissionService {
         long daysUntilDue = ChronoUnit.DAYS.between(LocalDate.now(), dueDate);
         int weeksUntilDue = (int) Math.floor(daysUntilDue / 7.0);  // 남은 주수
         return 40 - weeksUntilDue; // 임신 40주 기준 현재 주차
+    }
+
+    @Transactional 
+    // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
+    public MissionAIResponse analyzeMissionPhoto(Long missionId, MultipartFile image, User user) {
+        Mission mission = missionRepository.findById(missionId)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 미션입니다."));
+
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Uploader.upload(image, "mission");
+            imageUrl = cloudFrontDomain + "/" + imageUrl;
+        }
+
+        // AI 요청 보내기
+        MissionAIRequest aiRequest = MissionAIRequest.builder()
+                .title(mission.getTitle())
+                .description(mission.getDescription())
+                .keyword1(mission.getKeyword1())
+                .keyword2(mission.getKeyword2())
+                .keyword3(mission.getKeyword3())
+                .imageUrl(imageUrl)
+                .build();
+
+        MissionAIResponse aiResponse = restTemplate.postForObject(
+            missionAiUrl + "/mission/analyze-photo",
+            aiRequest,
+            MissionAIResponse.class
+        );
+
+        if (aiResponse == null || aiResponse.getResult() == null) {
+            throw new RuntimeException("AI 판독 결과가 없습니다.");
+        }
+
+        // 기존 MissionLog 검색
+        Optional<MissionLog> existingLogOpt = missionLogRepository.findByMissionIdAndUserId(missionId, user.getId());
+
+        if (existingLogOpt.isPresent()) {
+            MissionLog existingLog = existingLogOpt.get();
+
+            // S3에서 기존 이미지 삭제
+            if (existingLog.getImageUrl() != null && !existingLog.getImageUrl().isEmpty()) {
+                String imageKey = existingLog.getImageUrl().replace(cloudFrontDomain + "/", "");
+                s3Uploader.delete(imageKey);
+            }
+            // 기존 로그 삭제
+            missionLogRepository.delete(existingLog);
+        }
+
+        // 새로운 MissionLog 저장
+        MissionLog missionLog = MissionLog.builder()
+                .mission(mission)
+                .user(user)
+                .imageUrl(imageUrl)
+                .keyword1Success(aiResponse.getKeyword1())
+                .keyword2Success(aiResponse.getKeyword2())
+                .keyword3Success(aiResponse.getKeyword3())
+                .build();
+
+        missionLogRepository.save(missionLog);
+        
+        MissionAIResponse analysisResponse = MissionAIResponse.builder()
+                            .result(aiResponse.getResult())
+                            .reason(aiResponse.getReason())
+                            .keyword1(aiResponse.getKeyword1())
+                            .keyword2(aiResponse.getKeyword2())
+                            .keyword3(aiResponse.getKeyword3())
+                            .imageUrl(imageUrl)
+                            .build();
+
+        return analysisResponse; // 응답 DTO 생성
     }
 } 

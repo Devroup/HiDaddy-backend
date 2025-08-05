@@ -67,6 +67,10 @@ public class User {
 
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Mission> mission = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<MissionLog> missionLogs = new ArrayList<>();
 
     @Builder.Default

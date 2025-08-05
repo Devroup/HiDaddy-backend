@@ -7,13 +7,23 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
+
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
+    
+    @Value("${server.port:8080}")
+    private String serverPort;
 
     @Bean
     public OpenAPI openAPI() {
@@ -30,15 +40,35 @@ public class SwaggerConfig {
                 .in(SecurityScheme.In.HEADER)
                 .name("Authorization");
 
-        // 서버 정보 추가 - HTTPS 강제
-        Server httpsServer = new Server()
-                .url("https://devroup.com")
-                .description("Production server (HTTPS)");
+        List<Server> servers = getServersForEnvironment();
 
         return new OpenAPI()
-                .servers(List.of(httpsServer))  // 이 줄이 핵심!
+                .servers(servers)
                 .components(new Components().addSecuritySchemes("bearerAuth", securityScheme))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .info(info);
+    }
+
+    private List<Server> getServersForEnvironment() {
+        List<Server> servers = new ArrayList<>();
+        
+        if ("prod".equals(activeProfile)) {
+            // 프로덕션 환경
+            servers.add(new Server()
+                    .url("https://devroup.com")
+                    .description("Production server (HTTPS)"));
+        } 
+        else {
+            // 로컬 환경 (기본값)
+            servers.add(new Server()
+                    .url("http://localhost:" + serverPort)
+                    .description("Local development server"));
+            // 프로덕션 서버도 추가 (테스트용)
+            servers.add(new Server()
+                    .url("https://devroup.com")
+                    .description("Production server (HTTPS)"));
+        }
+
+        return servers;
     }
 }

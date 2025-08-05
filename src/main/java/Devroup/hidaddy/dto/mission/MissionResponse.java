@@ -17,17 +17,9 @@ public class MissionResponse {
     private String keyword1;
     private String keyword2;
     private String keyword3;
+    private Boolean keyword1Success;
+    private Boolean keyword2Success;
+    private Boolean keyword3Success;
+    private String imageUrl; 
     private LocalDateTime createdAt;
-
-    public static MissionResponse from(Mission mission) {
-        return MissionResponse.builder()
-                .id(mission.getId())
-                .title(mission.getTitle())
-                .description(mission.getDescription())
-                .keyword1(mission.getKeyword1())
-                .keyword2(mission.getKeyword2())
-                .keyword3(mission.getKeyword3())
-                .createdAt(mission.getCreatedAt())
-                .build();
-    }
 } 
