@@ -17,9 +17,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -129,10 +131,21 @@ public class UserService {
         // RefreshToken 먼저 삭제
         refreshTokenRepository.deleteByUser(user);
 
-        // 아기 정보 삭제 (Cascade 걸려 있지 않다면 명시적 삭제 필요)
-        babyRepository.deleteAllByUser(user);
+        // 아기 그룹 제거 전, 아기부터 삭제
+        List<Baby> userBabies = babyRepository.findAllByUser(user);
 
-        // 사용자 삭제
+        // 그룹 ID 모아서 그룹도 같이 삭제
+        Set<Long> groupIds = userBabies.stream()
+                .map(baby -> baby.getBabyGroup().getId())
+                .collect(Collectors.toSet());
+
+        // 아기 삭제
+        babyRepository.deleteAll(userBabies);
+
+        // 그룹 삭제
+        babyGroupRepository.deleteAllById(groupIds);
+
+        // 유저 삭제
         userRepository.delete(user);
     }
 
