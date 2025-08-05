@@ -73,7 +73,6 @@ public class EmotionDiaryService {
     }
 
     // 감정일기 수정 (update)
-    @Transactional
     public EmotionDiaryResponse updateEmotionDiary(
             User currentUser,
             LocalDate date,

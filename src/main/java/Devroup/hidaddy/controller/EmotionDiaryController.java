@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/emotion-diaries")
 @RequiredArgsConstructor
-@Tag(name = "Emotion-Diary", description = "감정일기 API")
+@Tag(name = "Emotion-Diary", description = "감Z정일기 API")
 public class EmotionDiaryController {
     private final EmotionDiaryService emotionDiaryService;
 
