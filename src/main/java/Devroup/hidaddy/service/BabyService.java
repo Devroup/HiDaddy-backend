@@ -99,6 +99,7 @@ public class BabyService {
     }
 
     // 아기 그룹 전체 조회
+    @Transactional
     public List<BabyResponse> getBabies(User user) {
         List<Baby> babies = babyRepository.findAllByUser(user);
 
