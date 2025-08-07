@@ -101,14 +101,14 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
     @GetMapping("/all-babies")
-    public ResponseEntity<List<BabyResponse>> getAllBabies(
+    public ResponseEntity<List<BabyGroupResponse>> getAllBabies(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        List<BabyResponse> babies = babyService.getBabies(userDetails.getUser());
+        List<BabyGroupResponse> babies = babyService.getBabies(userDetails.getUser());
         return ResponseEntity.ok(babies);
     }
 

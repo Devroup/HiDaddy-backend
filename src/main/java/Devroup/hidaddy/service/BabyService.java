@@ -4,6 +4,7 @@ import Devroup.hidaddy.dto.user.BabyRegisterListRequest;
 import Devroup.hidaddy.dto.user.BabyRegisterRequest;
 import Devroup.hidaddy.dto.user.BabyResponse;
 import Devroup.hidaddy.dto.user.BabyUpdateRequest;
+import Devroup.hidaddy.dto.user.BabyGroupResponse;
 import Devroup.hidaddy.entity.Baby;
 import Devroup.hidaddy.entity.BabyGroup;
 import Devroup.hidaddy.entity.User;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,14 +102,31 @@ public class BabyService {
 
     // 아기 그룹 전체 조회
     @Transactional
-    public List<BabyResponse> getBabies(User user) {
+    public List<BabyGroupResponse> getBabies(User user) {
         List<Baby> babies = babyRepository.findAllByUser(user);
 
         return babies.stream()
-                .map(baby -> {
-                    int groupSize = baby.getBabyGroup().getBabies().size(); // 해당 그룹 내 아기 수
-                    boolean isTwin = groupSize > 1;
-                    return new BabyResponse(baby, isTwin);
+                .collect(Collectors.groupingBy(b -> b.getBabyGroup().getId()))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    Long groupId = entry.getKey();
+                    List<Baby> groupBabies = entry.getValue();
+                    boolean isTwin = groupBabies.size() > 1;
+
+                    // 기준 dueDate는 첫 번째 아기의 것으로 사용
+                    LocalDate dueDate = groupBabies.get(0).getDueDate().toLocalDate();
+
+                    List<BabyResponse> babyResponses = groupBabies.stream()
+                            .map(b -> new BabyResponse(b, isTwin))
+                            .toList();
+
+                    return BabyGroupResponse.builder()
+                            .babyGroupId(groupId)
+                            .isTwin(isTwin)
+                            .dueDate(dueDate)
+                            .babies(babyResponses)
+                            .build();
                 })
                 .toList();
     }
