@@ -154,9 +154,9 @@ public class BabyService {
     }
 
     // 아기 그룹 삭제
-
+    @Transactional
     public void deleteBabyGroup(User user, Long groupId) {
-        BabyGroup group = babyGroupRepository.findById(groupId)
+        BabyGroup group = babyGroupRepository.findWithBabiesById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
         babyRepository.deleteAll(group.getBabies());
