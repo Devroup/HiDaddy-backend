@@ -163,7 +163,7 @@ public class UserService {
         }
 
         // 그룹 ID로 BabyGroup 조회
-        BabyGroup group = babyGroupRepository.findById(selectedGroupId)
+        BabyGroup group = babyGroupRepository.findWithBabiesById(selectedGroupId)
                 .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
         // 권한 검증
