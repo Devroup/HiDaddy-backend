@@ -115,7 +115,7 @@ public class BabyService {
     // 아기 그룹 수정
     @Transactional
     public List<BabyResponse> updateBabyGroup(Long groupId, List<BabyUpdateRequest> updates) {
-        BabyGroup group = babyGroupRepository.findById(groupId)
+        BabyGroup group = babyGroupRepository.findWithBabiesById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
         List<Baby> babies = group.getBabies();
