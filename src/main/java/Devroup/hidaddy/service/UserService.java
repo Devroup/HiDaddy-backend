@@ -35,8 +35,9 @@ public class UserService {
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
 
+    @Transactional
     public SelectedBabyResponse changeSelectedBabyGroup(User user, Long groupId) {
-        BabyGroup babyGroup = babyGroupRepository.findById(groupId)
+        BabyGroup babyGroup = babyGroupRepository.findWithBabiesById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("아기 그룹을 찾을 수 없습니다."));
 
         boolean isUserGroup = babyGroup.getBabies().stream()

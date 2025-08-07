@@ -18,6 +18,6 @@ public class BabyGroup {
     @GeneratedValue
     private Long id;
 
-    @OneToMany(mappedBy = "babyGroup")
+    @OneToMany(mappedBy = "babyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Baby> babies = new ArrayList<>();
 }

@@ -153,16 +153,23 @@ public class BabyService {
         return convertToResponses(babies, babies.size() > 1);
     }
 
-    // 아기 그룹 삭제
     @Transactional
     public void deleteBabyGroup(User user, Long groupId) {
         BabyGroup group = babyGroupRepository.findWithBabiesById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
-        babyRepository.deleteAll(group.getBabies());
-        babyGroupRepository.delete(group);
+        babyGroupRepository.delete(group);  // babies도 같이 삭제됨
 
-        user.setSelectedBabyId(null);
+        // 해당 유저가 가진 다른 아기들 중 하나를 가져오기 (dueDate 기준 최신순)
+        List<Baby> remainingBabies = babyRepository.findAllByUser(user);
+        if (!remainingBabies.isEmpty()) {
+            // 가장 최근 등록된 아기의 babyGroupId를 선택
+            Long newSelectedGroupId = remainingBabies.get(0).getBabyGroup().getId();
+            user.setSelectedBabyId(newSelectedGroupId);
+        } else {
+            user.setSelectedBabyId(null);
+        }
+
         userRepository.save(user);
     }
 
