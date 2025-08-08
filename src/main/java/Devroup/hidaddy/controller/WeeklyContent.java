@@ -22,10 +22,10 @@ public class WeeklyContent {
     @Operation(summary = "현재 주차의 정보 조회", description = "아이의 출산 예정일로 현재 주차를 계산하고 정보를 조회합니다.")
     @GetMapping("/current")
     public ResponseEntity<WeeklyContentResponse> getCurrentWeeklyContent(
-            @RequestParam Long babyId,
+            @RequestParam Long groupId,
             @AuthenticationPrincipal User user
     ) {
-        return ResponseEntity.ok(weeklyContentService.getWeeklyContent(babyId));
+        return ResponseEntity.ok(weeklyContentService.getWeeklyContent(groupId));
     }
 
     @Operation(summary = "특정 주차의 정보 조회", description = "원하는 특정 주차의 정보를 조회합니다.")
