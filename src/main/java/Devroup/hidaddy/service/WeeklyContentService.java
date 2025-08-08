@@ -3,7 +3,9 @@ package Devroup.hidaddy.service;
 import Devroup.hidaddy.dto.weeklycontent.WeeklyContentResponse;
 import Devroup.hidaddy.dto.weeklycontent.WeeklyContentSimpleResponse;
 import Devroup.hidaddy.entity.Baby;
+import Devroup.hidaddy.entity.BabyGroup;
 import Devroup.hidaddy.entity.WeeklyContent;
+import Devroup.hidaddy.repository.user.BabyGroupRepository;
 import Devroup.hidaddy.repository.user.BabyRepository;
 import Devroup.hidaddy.repository.weeklycontent.WeeklyContentRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,20 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class WeeklyContentService {
-    private final BabyRepository babyRepository;
+    private final BabyGroupRepository babyGroupRepository;
     private final WeeklyContentRepository weeklyContentRepository;
 
     // 출산 예정일로부터 현재 날짜 계산하여 해당 주차 컨텐츠 출력
-    public WeeklyContentResponse getWeeklyContent(Long babyId) {
-        Baby baby = babyRepository.findById(babyId)
-                .orElseThrow(() -> new IllegalArgumentException("아이를 찾을 수 없습니다."));
+    public WeeklyContentResponse getWeeklyContent(Long groupId) {
+        BabyGroup group = babyGroupRepository.findWithBabiesById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
-        int currentweek = caculateCurrentWeek(baby.getDueDate().toLocalDate());
+        List<Baby> babies = group.getBabies();
+
+        int currentweek = caculateCurrentWeek(babies.get(0).getDueDate().toLocalDate());
 
         WeeklyContent weeklyContent = weeklyContentRepository.findByWeek(currentweek)
                 .orElseThrow(() -> new IllegalArgumentException(currentweek + "주차 데이터가 없습니다."));
