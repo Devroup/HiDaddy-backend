@@ -1,5 +1,6 @@
 package Devroup.hidaddy.controller;
 
+import Devroup.hidaddy.dto.message.MessageResponse;
 import Devroup.hidaddy.service.MessageService;
 import Devroup.hidaddy.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,15 +36,15 @@ public class MessageController {
             @ApiResponse(responseCode = "400", description = "배우자 번호가 없거나 잘못된 요청"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    public ResponseEntity<String> sendSms(
+    public ResponseEntity<MessageResponse> sendSms(
             @RequestParam String text,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        
+
         if (userDetails == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
+            return ResponseEntity.status(401).build();
         }
 
-        String response = messageService.sendSmsToPartner(userDetails.getUser(), text);
+        MessageResponse response = messageService.sendSmsToPartner(userDetails.getUser(), text);
         return ResponseEntity.ok(response);
     }
 }
