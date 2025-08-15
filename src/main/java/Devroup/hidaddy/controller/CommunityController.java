@@ -42,6 +42,18 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getPosts(pageable, userDetails.getUser()));
     }
 
+    @Operation(summary = "게시글 상세 조회", description = "특정 게시글의 상세 정보와 댓글 목록을 조회합니다.")
+    @GetMapping("/{postId}")
+    public ResponseEntity<CommunityPostDetailResponse> getPostDetail(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(communityService.getPostDetail(postId, userDetails.getUser()));
+    }
+
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommunityPostResponse> createPost(

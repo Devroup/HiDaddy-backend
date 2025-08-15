@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Objects;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,29 @@ public class CommunityService {
             boolean isLiked = postLikeRepository.existsByPostAndUser(post, currentUser);
             return CommunityPostResponse.from(post, isLiked);
         });
+    }
+
+    // 게시글 상세 조회
+    public CommunityPostDetailResponse getPostDetail(Long postId, User currentUser) {
+        // 게시글 존재 여부 확인
+        CommunityPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        // 현재 사용자의 좋아요 여부 확인
+        boolean isLiked = postLikeRepository.existsByPostAndUser(post, currentUser);
+
+        // 해당 게시글의 모든 댓글 조회 (페이징 없이)
+        List<CommunityComment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post);
+        
+        // 댓글들을 DTO로 변환
+        List<CommentResponse> commentResponses = comments.stream()
+                .map(comment -> {
+                    boolean commentIsLiked = commentLikeRepository.existsByCommentAndUser(comment, currentUser);
+                    return CommentResponse.from(comment, commentIsLiked);
+                })
+                .toList();
+
+        return CommunityPostDetailResponse.from(post, isLiked, commentResponses);
     }
 
     // 게시글 작성
