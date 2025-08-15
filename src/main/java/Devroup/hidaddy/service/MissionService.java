@@ -5,11 +5,13 @@ import Devroup.hidaddy.entity.Mission;
 import Devroup.hidaddy.entity.MissionLog;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.entity.Baby;
+import Devroup.hidaddy.entity.BabyGroup;
 import Devroup.hidaddy.entity.WeeklyContent;
 import Devroup.hidaddy.repository.mission.MissionLogRepository;
 import Devroup.hidaddy.repository.mission.MissionRepository;
 import Devroup.hidaddy.repository.emotionDiary.EmotionDiaryRepository;
-import Devroup.hidaddy.repository.user.BabyRepository;
+import Devroup.hidaddy.repository.user.BabyRepository;  
+import Devroup.hidaddy.repository.user.BabyGroupRepository;
 import Devroup.hidaddy.repository.weeklycontent.WeeklyContentRepository;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,7 @@ public class MissionService {
     private final MissionLogRepository missionLogRepository;
     private final EmotionDiaryRepository emotionDiaryRepository;
     private final BabyRepository babyRepository;
+    private final BabyGroupRepository babyGroupRepository;
     private final WeeklyContentRepository WeeklyContentRepository;
     private final S3Uploader s3Uploader;
 
@@ -91,17 +94,25 @@ public class MissionService {
 
     @Transactional
     public MissionKeywordResponse getOrCreateTodayMission(User currentUser) {
-        // 아이와 유저 검증 로직
-        Long selectedBabyId = currentUser.getSelectedBabyId();
-        if(selectedBabyId == null)
-            throw new IllegalArgumentException("선택된 아이가 없습니다.");
+        Long selectedGroupId = currentUser.getSelectedBabyId();
+        if (selectedGroupId == null) {
+            throw new IllegalArgumentException("선택된 아기 그룹이 없습니다.");
+        }
 
-        Baby baby = babyRepository.findByIdAndUserId(
-                        currentUser.getSelectedBabyId(),
-                        currentUser.getId()
-                )
-                .orElseThrow(() -> new IllegalArgumentException("해당 아이를 찾을 수 없습니다."));
+        // 그룹 ID로 BabyGroup 조회
+        BabyGroup group = babyGroupRepository.findWithBabiesById(selectedGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
+        // 권한 검증
+        boolean isUserGroup = group.getBabies().stream()
+                .anyMatch(b -> b.getUser().getId().equals(currentUser.getId()));
+        if (!isUserGroup) {
+            throw new IllegalArgumentException("선택된 아기 그룹에 대한 권한이 없습니다.");
+        }
+
+        List<Baby> babies = group.getBabies();
+        // D-day 및 comment는 첫 번째 아기를 기준으로 설정
+        Baby baseBaby = babies.get(0);
         LocalDate today = LocalDate.now();
 
         // 오늘 미션 존재 여부 확인 (이미 생성된 미션이 있으면 바로 반환)
@@ -122,7 +133,7 @@ public class MissionService {
         }
 
         // 오늘 미션이 없으면 새로 생성
-        int currentWeek = calculateCurrentWeek(baby.getDueDate().toLocalDate());
+        int currentWeek = calculateCurrentWeek(baseBaby.getDueDate().toLocalDate());
 
         // 최근 3개의 감정일기 가져오기
         List<String> diaries = emotionDiaryRepository.findRecentDiaries(
