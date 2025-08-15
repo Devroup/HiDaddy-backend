@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
 import org.springframework.beans.factory.annotation.Value;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +65,10 @@ public class CommunityService {
         // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
         if (currentUser != null) {
             // 게시글 작성자와 현재 사용자가 다른 경우
-            if (post.getUser() != null && !post.getUser().equals(currentUser)) {
+            Long authorId = post.getUser() != null ? post.getUser().getId() : null;
+            Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+            if (!Objects.equals(authorId, requesterId)) {
                 throw new IllegalArgumentException("게시글 수정 권한이 없습니다.");
             }
         }
@@ -103,10 +107,14 @@ public class CommunityService {
         // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
         if (currentUser != null) {
             // 게시글 작성자와 현재 사용자가 다른 경우
-            if (post.getUser() != null && !post.getUser().equals(currentUser)) {
+            Long authorId = post.getUser() != null ? post.getUser().getId() : null;
+            Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+            if (!Objects.equals(authorId, requesterId)) {
                 throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
             }
         }
+
         // 기존 이미지 삭제
         if(post.getImageUrl() != null && !post.getImageUrl().isEmpty()){
             String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
@@ -169,7 +177,10 @@ public class CommunityService {
         // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
         if (currentUser != null) {
             // 댓글 작성자와 현재 사용자가 다른 경우
-            if (comment.getUser() != null && !comment.getUser().equals(currentUser)) {
+            Long authorId = comment.getUser() != null ? comment.getUser().getId() : null;
+            Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+            if (!Objects.equals(authorId, requesterId)) {
                 throw new IllegalArgumentException("댓글 수정 권한이 없습니다.");
             }
         }
@@ -197,7 +208,10 @@ public class CommunityService {
         // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
         if (currentUser != null) {
             // 댓글 작성자와 현재 사용자가 다른 경우
-            if (comment.getUser() != null && !comment.getUser().equals(currentUser)) {
+            Long authorId = comment.getUser() != null ? comment.getUser().getId() : null;
+            Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+            if (!Objects.equals(authorId, requesterId)) {
                 throw new IllegalArgumentException("댓글 삭제 권한이 없습니다.");
             }
         }
