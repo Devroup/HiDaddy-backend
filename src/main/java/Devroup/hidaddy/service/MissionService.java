@@ -49,11 +49,20 @@ public class MissionService {
     @Value("${spring.application.domain}")
     private String missionAiUrl;
 
-    public List<MissionLogResponse> getMissionHistory(User user) {
+    public MissionHistoryResponse getMissionHistory(User user) {
         List<MissionLog> missionLogs = missionLogRepository.findByUserOrderByCreatedAtDesc(user);
-        return missionLogs.stream()
+        
+        LocalDate today = LocalDate.now();
+        boolean isTodayCompleted = missionRepository.findByUserIdAndDate(user.getId(), today).isPresent();
+        
+        List<MissionLogResponse> missionLogList = missionLogs.stream()
                 .map(MissionLogResponse::from)
                 .collect(Collectors.toList());
+        
+        return MissionHistoryResponse.builder()
+                .missionLogList(missionLogList)
+                .isTodayCompleted(isTodayCompleted)
+                .build();
     }
 
     @Transactional

@@ -39,13 +39,13 @@ public class MissionController {
             @ApiResponse(responseCode = "200", description = "미션 과거목록 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<List<MissionLogResponse>> getMissionHistory(
+    public ResponseEntity<MissionHistoryResponse> getMissionHistory(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
 
-        List<MissionLogResponse> missionHistory = missionService.getMissionHistory(userDetails.getUser());
+        MissionHistoryResponse missionHistory = missionService.getMissionHistory(userDetails.getUser());
         return ResponseEntity.ok(missionHistory);
     }
 
