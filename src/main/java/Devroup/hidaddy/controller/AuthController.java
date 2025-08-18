@@ -12,7 +12,6 @@ import Devroup.hidaddy.service.AuthService;
 import Devroup.hidaddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(
@@ -40,15 +40,20 @@ public class AuthController {
     private final AuthService authService;
     private final UserRepository userRepository;
 
+    // Refresh Token을 검증하고, 유효하면 새로운 Access Token을 발급
     @Operation(
             summary = "Access Token 재발급",
             description = "만료된 Access Token을 Refresh Token을 사용하여 새로 발급합니다."
     )
-    @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공")
-    @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 Refresh Token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Access Token 재발급 성공"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 Refresh Token")
+    })
     @PostMapping("/renew")
     public ResponseEntity<RenewResponse> refreshAccessToken(
-            @Parameter(description = "리프레시 토큰 요청 DTO") @RequestBody RefreshTokenRequest requestDto) {
+            @Parameter(description = "리프레시 토큰 요청 DTO")
+            @RequestBody RefreshTokenRequest requestDto) {
+
         String refreshToken = requestDto.getRefreshToken();
         RefreshToken foundToken = refreshTokenRepository.findByToken(refreshToken).orElse(null);
 
@@ -59,19 +64,30 @@ public class AuthController {
         User user = userRepository.findById(foundToken.getUser().getId()).orElseThrow();
         String newAccessToken = jwtUtil.createAccessToken(user);
 
-        RenewResponse response = new  RenewResponse(newAccessToken, "Access Token 재발급 완료");
+        RenewResponse response = new RenewResponse(newAccessToken, "Access Token 재발급 완료");
         return ResponseEntity.ok(response);
     }
 
+    // OAuth2 Provider(구글/카카오/네이버)에서 받은 Authorization Code로 토큰을 교환하고
+    // 신규 유저면 회원가입 처리, 기존 유저면 로그인 처리 후 Access/Refresh Token을 발급
     @Operation(
             summary = "소셜 로그인 처리 (Access/Refresh Token 전달)",
             description = "구글, 카카오, 네이버 OAuth 2.0 인증 코드로 자체 Access/Refresh Token을 발급합니다."
     )
-    @ApiResponse(responseCode = "200", description = "로그인 성공")
-    @ApiResponse(responseCode = "400", description = "토큰 교환 실패 또는 Provider 오류")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "400", description = "토큰 교환 실패 또는 Provider 오류")
+    })
     @PostMapping("/tokens")
     public ResponseEntity<AuthResponse> oauth2Callback(
-            @Parameter(description = "SNS 제공자(google, kakao, naver)와 Authorization Code") @RequestBody AuthRequest requestDto) {
+            @Parameter(description = "SNS 제공자(google, kakao, naver)와 Authorization Code")
+            @RequestBody AuthRequest requestDto) {
+
+        if (requestDto == null || requestDto.getProvider() == null || requestDto.getProvider().isBlank()
+                || requestDto.getCode() == null || requestDto.getCode().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
         String provider = requestDto.getProvider();
         String code = requestDto.getCode();
 
@@ -105,6 +121,7 @@ public class AuthController {
         }
     }
 
+    // 전달받은 Refresh Token을 DB에서 삭제하여 해당 세션을 무효화
     @Operation(
             summary = "로그아웃",
             description = "사용자의 Refresh Token을 삭제하여 세션을 무효화합니다."
@@ -112,10 +129,11 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PostMapping("/logout")
     public ResponseEntity<MessageResponse> logout(
-            @Parameter(description = "로그아웃할 사용자의 Refresh Token") @RequestBody LogoutRequest logoutDto) {
-        String refreshToken = logoutDto.getRefreshToken();
+            @Parameter(description = "로그아웃할 사용자의 Refresh Token")
+            @RequestBody LogoutRequest logoutDto) {
+        String refreshToken = (logoutDto != null) ? logoutDto.getRefreshToken() : null;
 
-        if (refreshToken != null) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
             refreshTokenRepository.findByToken(refreshToken)
                     .ifPresent(refreshTokenRepository::delete);
         }
@@ -123,6 +141,7 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
     }
 
+    // 현재 로그인한 사용자의 계정 및 관련 데이터(아기 그룹, Refresh Token 등)를 모두 삭제
     @Operation(summary = "회원 탈퇴",
             description = "로그인한 사용자의 모든 정보와 관련 데이터(아기 정보, Refresh Token 등)를 삭제합니다.")
     @ApiResponses({
@@ -131,6 +150,10 @@ public class AuthController {
     })
     @DeleteMapping("/withdraw")
     public ResponseEntity<MessageResponse> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("인증되지 않은 사용자입니다."));
+        }
         userService.deleteUser(userDetails.getUser());
         return ResponseEntity.ok(new MessageResponse("회원 탈퇴가 완료되었습니다."));
     }
