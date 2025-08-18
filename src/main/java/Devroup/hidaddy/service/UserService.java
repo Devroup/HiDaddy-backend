@@ -98,7 +98,6 @@ public class UserService {
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
-                    newUser.setProfileImageUrl(cloudFrontDomain + "/profile/default_image.svg");
                     isNewUser.set(true);
                     return userRepository.save(newUser);
                 });
