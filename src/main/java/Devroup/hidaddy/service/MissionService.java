@@ -65,7 +65,7 @@ public class MissionService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public MissionResponse getMissionDetail(Long missionId, User user) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 미션을 찾을 수 없습니다."));
@@ -131,7 +131,7 @@ public class MissionService {
                 .build();
     }
     
-    @Transactional
+    @Transactional(readOnly = false)
     public MissionKeywordResponse createTodayMission(User currentUser) {
         Long selectedGroupId = currentUser.getSelectedBabyId();
         if (selectedGroupId == null) {
@@ -229,7 +229,7 @@ public class MissionService {
         return 40 - weeksUntilDue; // 임신 40주 기준 현재 주차
     }
 
-    @Transactional 
+    @Transactional(readOnly = false)
     // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
     public MissionAIResponse analyzeMissionPhoto(Long missionId, MultipartFile image, User user) {
         Mission mission = missionRepository.findById(missionId)
