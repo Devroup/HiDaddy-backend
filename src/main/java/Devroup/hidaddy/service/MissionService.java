@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
@@ -31,7 +32,6 @@ import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MissionService {
     private final RestTemplate restTemplate;
     private final MissionRepository missionRepository;
@@ -131,7 +131,7 @@ public class MissionService {
                 .build();
     }
     
-    @Transactional(readOnly = false)
+    @Transactional
     public MissionKeywordResponse createTodayMission(User currentUser) {
         Long selectedGroupId = currentUser.getSelectedBabyId();
         if (selectedGroupId == null) {
@@ -150,7 +150,7 @@ public class MissionService {
         }
 
         // Double-check: AI 호출 전에 한번 더 확인
-        Optional<Mission> doubleCheck = getTodayMission(currentUser.getId());
+        Optional<Mission> doubleCheck = missionRepository.findByUserIdAndDate(currentUser.getId(), LocalDate.now());
         if (doubleCheck.isPresent()) {
             return buildMissionResponse(doubleCheck.get());
         }
@@ -189,7 +189,7 @@ public class MissionService {
         }
         
         // 최종 저장 전 한번 더 체크 (매우 드문 케이스 대비)
-        Optional<Mission> finalCheck = getTodayMission(currentUser.getId());
+        Optional<Mission> finalCheck = missionRepository.findByUserIdAndDate(currentUser.getId(), today);
         if (finalCheck.isPresent()) {
             return buildMissionResponse(finalCheck.get());
         }
