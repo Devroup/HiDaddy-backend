@@ -3,7 +3,6 @@ package Devroup.hidaddy.service;
 import Devroup.hidaddy.dto.user.BabyRegisterListRequest;
 import Devroup.hidaddy.dto.user.BabyRegisterRequest;
 import Devroup.hidaddy.dto.user.BabyResponse;
-import Devroup.hidaddy.dto.user.BabyUpdateRequest;
 import Devroup.hidaddy.dto.user.BabyGroupResponse;
 import Devroup.hidaddy.entity.Baby;
 import Devroup.hidaddy.entity.BabyGroup;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,7 +49,7 @@ public class BabyService {
 
         List<Baby> babyEntities = new ArrayList<>();
         for (BabyRegisterRequest dto : babies) {
-            LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
+            LocalDateTime parsedDueDate = dto.getDueDate().atStartOfDay();
 
             Baby baby = Baby.builder()
                     .name(dto.getBabyName())
@@ -81,7 +79,7 @@ public class BabyService {
 
         List<Baby> babyEntities = new ArrayList<>();
         for (BabyRegisterRequest dto : babies) {
-            LocalDateTime parsedDueDate = parseDueDate(dto.getDueDate());
+            LocalDateTime parsedDueDate = dto.getDueDate().atStartOfDay();
 
             Baby baby = Baby.builder()
                     .name(dto.getBabyName())
@@ -134,7 +132,7 @@ public class BabyService {
 
     // 아기 그룹 수정
     @Transactional
-    public List<BabyResponse> updateBabyGroup(Long groupId, List<BabyUpdateRequest> updates) {
+    public List<BabyResponse> updateBabyGroup(Long groupId, List<BabyRegisterRequest> updates) {
         BabyGroup group = babyGroupRepository.findWithBabiesById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("선택된 아기 그룹을 찾을 수 없습니다."));
 
@@ -142,9 +140,9 @@ public class BabyService {
 
         for (int i = 0; i < updates.size(); i++) {
             Baby baby = babies.get(i);
-            BabyUpdateRequest dto = updates.get(i);
+            BabyRegisterRequest dto = updates.get(i);
 
-            if (dto.getName() != null) baby.setName(dto.getName());
+            if (dto.getBabyName() != null) baby.setName(dto.getBabyName());
             if (dto.getDueDate() != null) baby.setDueDate(dto.getDueDate().atStartOfDay());
         }
 
@@ -171,14 +169,6 @@ public class BabyService {
         }
 
         userRepository.save(user);
-    }
-
-    private LocalDateTime parseDueDate(String dueDate) {
-        try {
-            return LocalDate.parse(dueDate).atStartOfDay();
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("출산 예정일 형식이 올바르지 않습니다. yyyy-MM-dd 형식이어야 합니다.");
-        }
     }
 
     private List<BabyResponse> convertToResponses(List<Baby> babies, boolean isTwin) {

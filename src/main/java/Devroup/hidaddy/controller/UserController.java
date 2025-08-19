@@ -149,7 +149,7 @@ public class UserController {
     })
     public ResponseEntity<List<BabyResponse>> updateBaby(
             @PathVariable Long groupId,
-            @RequestBody List<BabyUpdateRequest> updates,
+            @RequestBody List<BabyRegisterRequest> updates,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         if (userDetails == null) {
