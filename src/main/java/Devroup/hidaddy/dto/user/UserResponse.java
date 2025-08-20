@@ -5,6 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class UserResponse {
+    private Long userId;
     private String userName;
     private String phone;
     private String partnerPhone;
@@ -12,6 +13,7 @@ public class UserResponse {
     private String email;
 
     public UserResponse(User user) {
+        this.userId = user.getId();
         this.userName = user.getName();
         this.partnerPhone = user.getPartnerPhone();
         this.phone = user.getPhone();
