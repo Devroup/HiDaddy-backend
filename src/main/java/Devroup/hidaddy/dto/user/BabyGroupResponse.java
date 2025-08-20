@@ -10,7 +10,5 @@ import java.util.List;
 @Builder
 public class BabyGroupResponse {
     private Long babyGroupId;
-    private boolean isTwin;
-    private LocalDate dueDate;  // <-- 추가
     private List<BabyResponse> babies;
 }
