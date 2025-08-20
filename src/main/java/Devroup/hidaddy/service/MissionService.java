@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
@@ -31,7 +32,6 @@ import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MissionService {
     private final RestTemplate restTemplate;
     private final MissionRepository missionRepository;
@@ -65,7 +65,7 @@ public class MissionService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public MissionResponse getMissionDetail(Long missionId, User user) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 미션을 찾을 수 없습니다."));
@@ -101,8 +101,38 @@ public class MissionService {
                 .build();
     }
 
-    @Transactional
     public MissionKeywordResponse getOrCreateTodayMission(User currentUser) {
+        // 1차: 빠른 조회
+        Optional<Mission> existingMission = getTodayMission(currentUser.getId());
+        if (existingMission.isPresent()) {
+            return buildMissionResponse(existingMission.get());
+        }
+        
+        // 없으면 생성
+        return createTodayMission(currentUser);
+    }
+    
+    @Transactional(readOnly = true)
+    public Optional<Mission> getTodayMission(Long userId) {
+        LocalDate today = LocalDate.now();
+        return missionRepository.findByUserIdAndDate(userId, today);
+    }
+    
+    private MissionKeywordResponse buildMissionResponse(Mission mission) {
+        return MissionKeywordResponse.builder()
+                .missionId(mission.getId())
+                .title(mission.getTitle())
+                .description(mission.getDescription())
+                .keywords(Arrays.asList(
+                        mission.getKeyword1(),
+                        mission.getKeyword2(),
+                        mission.getKeyword3()
+                ))
+                .build();
+    }
+    
+    @Transactional
+    public MissionKeywordResponse createTodayMission(User currentUser) {
         Long selectedGroupId = currentUser.getSelectedBabyId();
         if (selectedGroupId == null) {
             throw new IllegalArgumentException("선택된 아기 그룹이 없습니다.");
@@ -119,28 +149,16 @@ public class MissionService {
             throw new IllegalArgumentException("선택된 아기 그룹에 대한 권한이 없습니다.");
         }
 
-        List<Baby> babies = group.getBabies();
-        // D-day 및 comment는 첫 번째 아기를 기준으로 설정
-        Baby baseBaby = babies.get(0);
-        LocalDate today = LocalDate.now();
-
-        // 오늘 미션 존재 여부 확인 (이미 생성된 미션이 있으면 바로 반환)
-        Optional<Mission> existingMissionOpt = missionRepository.findByUserIdAndDate(currentUser.getId(), today);
-        if (existingMissionOpt.isPresent()) {
-            Mission existingMission = existingMissionOpt.get();
-
-            return MissionKeywordResponse.builder()
-                    .missionId(existingMission.getId())
-                    .title(existingMission.getTitle())
-                    .description(existingMission.getDescription())
-                    .keywords(Arrays.asList(
-                            existingMission.getKeyword1(),
-                            existingMission.getKeyword2(),
-                            existingMission.getKeyword3()
-                    ))
-                    .build();
+        // Double-check: AI 호출 전에 한번 더 확인
+        Optional<Mission> doubleCheck = missionRepository.findByUserIdAndDate(currentUser.getId(), LocalDate.now());
+        if (doubleCheck.isPresent()) {
+            return buildMissionResponse(doubleCheck.get());
         }
 
+        List<Baby> babies = group.getBabies();
+        Baby baseBaby = babies.get(0);
+        LocalDate today = LocalDate.now();
+        
         // 오늘 미션이 없으면 새로 생성
         int currentWeek = calculateCurrentWeek(baseBaby.getDueDate().toLocalDate());
 
@@ -163,16 +181,17 @@ public class MissionService {
         // AI 요청 DTO
         MissionKeywordRequest aiRequest = new MissionKeywordRequest(diaries, guideText);
 
-        // AI 서버 요청 -> 오늘 미션 생성
-        MissionKeywordResponse aiResponse = restTemplate.postForObject(
-            // 로컬에서는 공인IP로, 배포환경에서는 localhost로 들어감
-            missionAiUrl + "/mission/generate-mission",
-            aiRequest,
-            MissionKeywordResponse.class
-        );
+        // AI 서버 요청 -> 오늘 미션 생성 (트랜잭션 밖에서 호출)
+        MissionKeywordResponse aiResponse = callAiService(aiRequest);
 
         if (aiResponse == null || aiResponse.getKeywords() == null || aiResponse.getKeywords().isEmpty()) {
             throw new RuntimeException("AI 응답에 키워드가 없습니다.");
+        }
+        
+        // 최종 저장 전 한번 더 체크 (매우 드문 케이스 대비)
+        Optional<Mission> finalCheck = missionRepository.findByUserIdAndDate(currentUser.getId(), today);
+        if (finalCheck.isPresent()) {
+            return buildMissionResponse(finalCheck.get());
         }
         
         // Mission DB 저장
@@ -193,6 +212,15 @@ public class MissionService {
         
         return aiResponse;
     }
+    
+    private MissionKeywordResponse callAiService(MissionKeywordRequest aiRequest) {
+        return restTemplate.postForObject(
+            // 로컬에서는 공인IP로, 배포환경에서는 localhost로 들어감
+            missionAiUrl + "/mission/generate-mission",
+            aiRequest,
+            MissionKeywordResponse.class
+        );
+    }
 
     // 현재 주차 계산 (예정일 기준)
     private int calculateCurrentWeek(LocalDate dueDate) {
@@ -201,7 +229,7 @@ public class MissionService {
         return 40 - weeksUntilDue; // 임신 40주 기준 현재 주차
     }
 
-    @Transactional 
+    @Transactional(readOnly = false)
     // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
     public MissionAIResponse analyzeMissionPhoto(Long missionId, MultipartFile image, User user) {
         Mission mission = missionRepository.findById(missionId)

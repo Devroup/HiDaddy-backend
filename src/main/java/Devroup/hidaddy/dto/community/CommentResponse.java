@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class CommentResponse {
     private Long id;
     private String content;
+    private Long authorId;
     private String authorName;
     private String authorProfileImageUrl;
     private Integer likeCount;
@@ -24,6 +25,7 @@ public class CommentResponse {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
+                .authorId(comment.getUser() != null ? comment.getUser().getId() : null)
                 .authorName(comment.getUser() != null ? comment.getUser().getName() : "Unknown")
                 .authorProfileImageUrl(comment.getUser() != null ? comment.getUser().getProfileImageUrl() : null)
                 .likeCount(comment.getLike())
