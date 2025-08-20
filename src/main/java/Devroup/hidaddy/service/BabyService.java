@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,17 +111,12 @@ public class BabyService {
                     List<Baby> groupBabies = entry.getValue();
                     boolean isTwin = groupBabies.size() > 1;
 
-                    // 기준 dueDate는 첫 번째 아기의 것으로 사용
-                    LocalDate dueDate = groupBabies.get(0).getDueDate().toLocalDate();
-
                     List<BabyResponse> babyResponses = groupBabies.stream()
                             .map(b -> new BabyResponse(b, isTwin))
                             .toList();
 
                     return BabyGroupResponse.builder()
                             .babyGroupId(groupId)
-                            .isTwin(isTwin)
-                            .dueDate(dueDate)
                             .babies(babyResponses)
                             .build();
                 })
