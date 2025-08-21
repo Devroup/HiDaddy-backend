@@ -49,6 +49,7 @@ public class MissionService {
     @Value("${spring.application.domain}")
     private String missionAiUrl;
 
+    @Transactional(readOnly = true)
     public MissionHistoryResponse getMissionHistory(User user) {
         List<MissionLog> missionLogs = missionLogRepository.findByUserOrderByCreatedAtDesc(user);
         
