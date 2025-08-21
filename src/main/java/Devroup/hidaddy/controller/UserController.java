@@ -63,19 +63,19 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<MessageResponse> changeName(
+    public ResponseEntity<ApiMessageResponse> changeName(
             @RequestBody ChangeUserNameRequest requestDto,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("인증이 필요합니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiMessageResponse("인증이 필요합니다."));
         }
         if (requestDto == null || requestDto.getUserName() == null || requestDto.getUserName().trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse("이름은 비워둘 수 없습니다."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiMessageResponse("이름은 비워둘 수 없습니다."));
         }
 
         userService.changeUserName(userDetails.getUser(), requestDto.getUserName().trim());
-        return ResponseEntity.ok(new MessageResponse("유저 이름 변경 완료"));
+        return ResponseEntity.ok(new ApiMessageResponse("유저 이름 변경 완료"));
     }
 
     // 아기 등록 (튜토리얼 플로우)
@@ -166,7 +166,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "아기 그룹 삭제 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<MessageResponse> deleteBaby(
+    public ResponseEntity<ApiMessageResponse> deleteBaby(
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
@@ -175,7 +175,7 @@ public class UserController {
         }
 
         babyService.deleteBabyGroup(userDetails.getUser(), groupId);
-        return ResponseEntity.ok(new MessageResponse("아기 그룹 삭제 완료"));
+        return ResponseEntity.ok(new ApiMessageResponse("아기 그룹 삭제 완료"));
     }
 
     // 간단 아기 등록 (태명/예정일만)
@@ -246,8 +246,8 @@ public class UserController {
     @PatchMapping("/phone")
     @Operation(
             summary = "사용자 및 파트너 전화번호 등록/수정",
-            description = "로그인된 사용자의 `phone`과 `partnerPhone`을 등록하거나 수정합니다. "
-                    + "요청 시 JSON 바디로 `phone`, `partnerPhone` 값을 전달하며, "
+            description = "로그인된 사용자의 `partnerPhone`을 등록하거나 수정합니다. "
+                    + "요청 시 JSON 바디로 `partnerPhone` 값을 전달하며, "
                     + "둘 중 하나만 보내도 되고, 보내지 않은 필드는 기존 값을 유지합니다. "
                     + "Authorization 헤더에 유효한 Access Token이 필요합니다."
     )
@@ -257,7 +257,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)"),
             @ApiResponse(responseCode = "404", description = "해당 유저를 찾을 수 없음")
     })
-    public ResponseEntity<MessageResponse> patchPhoneNumbers(
+    public ResponseEntity<ApiMessageResponse> patchPhoneNumbers(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody PhoneUpdateRequest dto
     ) {
@@ -265,6 +265,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         userService.updatePhoneNumbers(userDetails.getUser().getId(), dto);
-        return ResponseEntity.ok(new MessageResponse("전화번호가 성공적으로 변경되었습니다."));
+        return ResponseEntity.ok(new ApiMessageResponse("전화번호가 성공적으로 변경되었습니다."));
     }
 }

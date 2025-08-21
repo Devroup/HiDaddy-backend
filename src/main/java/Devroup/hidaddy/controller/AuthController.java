@@ -1,7 +1,7 @@
 package Devroup.hidaddy.controller;
 
 import Devroup.hidaddy.dto.auth.*;
-import Devroup.hidaddy.dto.user.MessageResponse;
+import Devroup.hidaddy.dto.user.ApiMessageResponse;
 import Devroup.hidaddy.entity.RefreshToken;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.jwt.JwtUtil;
@@ -128,7 +128,7 @@ public class AuthController {
             description = "사용자의 Refresh Token을 삭제하여 세션을 무효화합니다."
     )
     @ApiResponse(responseCode = "200", description = "로그아웃 성공")
-    public ResponseEntity<MessageResponse> logout(
+    public ResponseEntity<ApiMessageResponse> logout(
             @Parameter(description = "로그아웃할 사용자의 Refresh Token")
             @RequestBody LogoutRequest logoutDto) {
         String refreshToken = (logoutDto != null) ? logoutDto.getRefreshToken() : null;
@@ -138,7 +138,7 @@ public class AuthController {
                     .ifPresent(refreshTokenRepository::delete);
         }
 
-        return ResponseEntity.ok(new MessageResponse("로그아웃 완료"));
+        return ResponseEntity.ok(new ApiMessageResponse("로그아웃 완료"));
     }
 
     // 현재 로그인한 사용자의 계정 및 관련 데이터(아기 그룹, Refresh Token 등)를 모두 삭제
@@ -149,12 +149,12 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자 (로그인 필요)")
     })
-    public ResponseEntity<MessageResponse> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<ApiMessageResponse> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponse("인증되지 않은 사용자입니다."));
+                    .body(new ApiMessageResponse("인증되지 않은 사용자입니다."));
         }
         userService.deleteUser(userDetails.getUser());
-        return ResponseEntity.ok(new MessageResponse("회원 탈퇴가 완료되었습니다."));
+        return ResponseEntity.ok(new ApiMessageResponse("회원 탈퇴가 완료되었습니다."));
     }
 }

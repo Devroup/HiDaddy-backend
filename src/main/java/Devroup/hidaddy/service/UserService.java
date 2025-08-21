@@ -232,9 +232,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        if (dto.getPhone() != null) {
-            user.setPhone(dto.getPhone());
-        }
         if (dto.getPartnerPhone() != null) {
             user.setPartnerPhone(dto.getPartnerPhone());
         }

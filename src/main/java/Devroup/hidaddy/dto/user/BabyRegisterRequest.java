@@ -1,14 +1,10 @@
 package Devroup.hidaddy.dto.user;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 
 @Getter
-@NoArgsConstructor
 public class BabyRegisterRequest {
     private String babyName;
 

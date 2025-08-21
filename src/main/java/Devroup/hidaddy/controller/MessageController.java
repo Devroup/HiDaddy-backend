@@ -27,8 +27,7 @@ public class MessageController {
     @Operation(
             summary = "SMS 메시지 전송",
             description = "로그인된 사용자의 배우자 번호로 SMS 메시지를 전송합니다. "
-                    + "Authorization 헤더에 유효한 Access Token이 필요합니다. <br>"
-                    + "무료 토큰이 15개여서, 다른 플랫폼으로 내부적으로 변경 예정입니다. 해당 API는 유지됩니다."
+                    + "Authorization 헤더에 유효한 Access Token이 필요합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "메시지 전송 성공"),
