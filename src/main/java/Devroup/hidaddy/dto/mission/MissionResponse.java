@@ -21,5 +21,6 @@ public class MissionResponse {
     private Boolean keyword2Success;
     private Boolean keyword3Success;
     private String imageUrl; 
+    private String content;
     private LocalDateTime createdAt;
 } 

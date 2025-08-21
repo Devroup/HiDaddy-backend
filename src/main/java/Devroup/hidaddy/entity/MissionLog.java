@@ -44,6 +44,9 @@ public class MissionLog {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

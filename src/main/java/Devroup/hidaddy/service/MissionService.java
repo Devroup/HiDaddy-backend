@@ -77,6 +77,7 @@ public class MissionService {
         Boolean keyword2Success = false;
         Boolean keyword3Success = false;
         String imageUrl = null;
+        String content = null;
 
         if (missionLogOpt.isPresent()) {
             MissionLog log = missionLogOpt.get();
@@ -84,6 +85,7 @@ public class MissionService {
             keyword2Success = Boolean.TRUE.equals(log.getKeyword2Success());
             keyword3Success = Boolean.TRUE.equals(log.getKeyword3Success());
             imageUrl = log.getImageUrl();
+            content = log.getContent();
         }
         
         // MissionResponse 생성
@@ -98,6 +100,7 @@ public class MissionService {
                 .keyword2Success(keyword2Success)
                 .keyword3Success(keyword3Success)
                 .imageUrl(imageUrl)
+                .content(content)
                 .createdAt(mission.getCreatedAt())
                 .build();
     }
@@ -232,7 +235,7 @@ public class MissionService {
 
     @Transactional(readOnly = false)
     // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
-    public MissionAIResponse analyzeMissionPhoto(Long missionId, MultipartFile image, User user) {
+    public MissionAIResponse analyzeMissionPhoto(Long missionId, MultipartFile image, String content, User user) {
         Mission mission = missionRepository.findById(missionId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 미션입니다."));
 
@@ -282,6 +285,7 @@ public class MissionService {
                 .mission(mission)
                 .user(user)
                 .imageUrl(imageUrl)
+                .content(content)
                 .keyword1Success(aiResponse.getKeyword1())
                 .keyword2Success(aiResponse.getKeyword2())
                 .keyword3Success(aiResponse.getKeyword3())

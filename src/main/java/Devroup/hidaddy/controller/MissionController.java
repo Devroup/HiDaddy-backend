@@ -97,6 +97,7 @@ public class MissionController {
             summary = "미션 사진 검증",
             description = "지정된 미션에 대해 사진을 업로드하여 적합 여부를 검증합니다. "
                     + "미션의 설명과 키워드를 기반으로 AI가 사진을 판독해 결과를 반환합니다. "
+                    + "사진과 함께 사용자의 속마음(content)도 함께 저장됩니다. "
                     + "Authorization 헤더에 유효한 Access Token이 필요합니다."
 )
     @ApiResponses({
@@ -107,12 +108,13 @@ public class MissionController {
     public ResponseEntity<MissionAIResponse> analyzeMission(
         @PathVariable Long missionId,
         @RequestPart(value = "image", required = false) MultipartFile image,
+        @RequestPart(value = "content", required = false) String content,
         @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
-        MissionAIResponse result = missionService.analyzeMissionPhoto(missionId, image, userDetails.getUser());
+        MissionAIResponse result = missionService.analyzeMissionPhoto(missionId, image, content, userDetails.getUser());
         return ResponseEntity.ok(result);
     }
 } 
