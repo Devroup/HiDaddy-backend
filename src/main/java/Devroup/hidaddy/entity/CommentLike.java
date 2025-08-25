@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import java.time.LocalDateTime;
 import Devroup.hidaddy.service.community.CommunityService;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +26,12 @@ public class CommentLike {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private CommunityComment comment;
 
     @Column(name = "created_at")
