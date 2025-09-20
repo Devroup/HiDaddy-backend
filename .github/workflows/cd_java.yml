@@ -29,8 +29,10 @@ jobs:
     - name: Build JAR with Gradle (exclude test)
       run: ./gradlew clean bootJar -x test
 
-    - name: Confirm built JAR
-      run: ls -al build/libs
+    - name: Fix jar name
+      run: |
+        JAR=$(ls build/libs/*.jar | head -n1)
+        mv "$JAR" build/libs/hidaddy.jar
 
     - name: Upload JAR and Service File to EC2
       uses: appleboy/scp-action@v0.1.6
@@ -38,7 +40,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
-        source: "build/libs/*.jar, deploy/bloomway.service"
+        source: "build/libs/hidaddy.jar, deploy/hidaddy.service"
         target: /home/ubuntu
 
     - name: Deploy on EC2 (서비스 재시작)
@@ -48,8 +50,8 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          sudo mv /home/ubuntu/deploy/bloomway.service /etc/systemd/system/bloomway.service
+          sudo mv /home/ubuntu/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
           sudo systemctl daemon-reload
-          sudo systemctl enable bloomway
-          sudo systemctl restart bloomway
-          sudo systemctl status bloomway --no-pager
+          sudo systemctl enable hidaddy
+          sudo systemctl restart hidaddy
+          sudo systemctl status hidaddy --no-pager
