@@ -61,7 +61,7 @@ jobs:
           fi
 
           # 서비스 파일 배치
-          mv -f /root/hidaddy.service /etc/systemd/system/hidaddy.service
+          mv -f /root/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
 
           # JAR를 /root 하위로 고정(필요 시 소유권 조정)
           ls -al /root/hidaddy.jar
