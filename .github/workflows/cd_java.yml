@@ -35,40 +35,34 @@ jobs:
         mv "$JAR" build/libs/hidaddy.jar
         ls -al build/libs
 
-    # ----- root 계정 사용, 키는 Secrets의 PEM(개행 포함) -----
-    - name: Write SSH key to file
+    - name: Write SSH key to file (in workspace)
       run: |
-        echo "${{ secrets.EC2_KEY }}" > /tmp/deploy.pem
-        chmod 600 /tmp/deploy.pem
+        cat > ./deploy.pem <<'EOF'
+        ${{ secrets.EC2_KEY }}
+        EOF
+        chmod 600 ./deploy.pem
 
     - name: Upload JAR and Service File to server (root)
       uses: appleboy/scp-action@v0.1.6
       with:
         host: ${{ secrets.EC2_HOST }}
         username: root
-        key_path: /tmp/deploy.pem
+        key_path: ./deploy.pem
         source: "build/libs/hidaddy.jar, deploy/hidaddy.service"
-        target: /root
+        target: /root 
 
     - name: Deploy on server (systemd, root)
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: root
-        key_path: /tmp/deploy.pem
+        key_path: ./deploy.pem
         script: |
-          # JDK 17 보장 (이미 설치되어 있으면 건너뜀)
           if ! command -v java >/dev/null 2>&1; then
             apt-get update -y && apt-get install -y openjdk-17-jre
           fi
-
-          # 서비스 파일 배치
           mv -f /root/hidaddy.service /etc/systemd/system/hidaddy.service
-
-          # JAR를 /root 하위로 고정(필요 시 소유권 조정)
-          ls -al /root/hidaddy.jar
-
           systemctl daemon-reload
           systemctl enable hidaddy
           systemctl restart hidaddy
-          systemctl status hidaddy --no-pager
+          systemctl status hidaddy --no-pager 
