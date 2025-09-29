@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import Devroup.hidaddy.util.S3Uploader;
+import Devroup.hidaddy.util.NcpObjectStorageUploader;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -19,6 +20,7 @@ import java.util.List;
 @Transactional
 public class EmotionDiaryService {
     private final S3Uploader s3Uploader;
+    private final NcpObjectStorageUploader ncpObjectStorageUploader;
     private final EmotionDiaryRepository diaryRepository;
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
@@ -27,8 +29,7 @@ public class EmotionDiaryService {
         LocalDate dataToSave = (dto.getDate() == null) ? LocalDate.now() : dto.getDate();
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
-            imageUrl = s3Uploader.upload(image, "emotionDiary");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "emotionDiary");
         }
 
         EmotionDiary diary = EmotionDiary.builder()
@@ -85,12 +86,10 @@ public class EmotionDiaryService {
         if (image != null && !image.isEmpty()) {
             // 기존 이미지 삭제
             if (diary.getImageUrl() != null && !diary.getImageUrl().isEmpty()) {
-                String imageKey = diary.getImageUrl().replace(cloudFrontDomain + "/", "");
-                s3Uploader.delete(imageKey);
+                ncpObjectStorageUploader.deleteByCdnUrl(diary.getImageUrl());
             }
             // 새 이미지 업로드
-            String imageUrl = s3Uploader.upload(image, "emotionDiary");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            String imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "emotionDiary");
             diary.setImageUrl(imageUrl);
         }
 
@@ -100,6 +99,12 @@ public class EmotionDiaryService {
     // 감정일기 삭제 (delete)
     public void deleteEmotionDiary(User currentUser, LocalDate date) {
         EmotionDiary diary = findDiaryOrThrow(currentUser.getId(), date);
+        
+        // 기존 이미지 삭제
+        if(diary.getImageUrl() != null && !diary.getImageUrl().isEmpty()){
+            boolean attempted = ncpObjectStorageUploader.deleteByCdnUrl(diary.getImageUrl());
+            // if (!attempted) log.info("Unexpected image URL (not endpoint): {}", post.getImageUrl());
+        }
 
         diaryRepository.delete(diary);
     }
