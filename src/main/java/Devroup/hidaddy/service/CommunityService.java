@@ -10,10 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
+import Devroup.hidaddy.util.NcpObjectStorageUploader;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.Objects;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +26,7 @@ public class CommunityService {
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final S3Uploader s3Uploader;
+    private final NcpObjectStorageUploader ncpObjectStorageUploader;
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
     
@@ -60,14 +64,32 @@ public class CommunityService {
         return CommunityPostDetailResponse.from(post, isLiked, commentResponses);
     }
 
-    // 게시글 작성
-    @Transactional 
-    // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
+    // 게시글 작성 (AWS S3)
+    // @Transactional 
+    // // 트랜잭션 처리를 보장 -> 모든 작업이 성공적으로 완료되거나 하나라도 실패하면 모든 작업이 롤백됨 -> 데이터 일관성 유지 
+    // public CommunityPostResponse createPost(String content, MultipartFile image, User user) {
+    //     String imageUrl = null;
+    //     if (image != null && !image.isEmpty()) {
+    //         imageUrl = s3Uploader.upload(image, "community");
+    //         imageUrl = cloudFrontDomain + "/" + imageUrl;
+    //     }
+
+    //     CommunityPost post = CommunityPost.builder()
+    //         .content(content)
+    //         .imageUrl(imageUrl)
+    //         .user(user)
+    //         .build();
+    //     postRepository.save(post);
+    //     return CommunityPostResponse.from(post, false); // 응답 DTO 생성
+    // }
+    // 게시글 작성 (NCP Storage)
+    @Transactional
     public CommunityPostResponse createPost(String content, MultipartFile image, User user) {
         String imageUrl = null;
+
         if (image != null && !image.isEmpty()) {
-            imageUrl = s3Uploader.upload(image, "community");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            // NCP 업로더가 CDN 도메인 설정까지 반영해서 최종 접근 URL을 반환
+            imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "community");
         }
 
         CommunityPost post = CommunityPost.builder()
@@ -75,11 +97,54 @@ public class CommunityService {
             .imageUrl(imageUrl)
             .user(user)
             .build();
+
         postRepository.save(post);
-        return CommunityPostResponse.from(post, false); // 응답 DTO 생성
+        return CommunityPostResponse.from(post, false);
     }
 
-    // 게시글 수정
+    // // 게시글 수정 (AWS S3)
+    // @Transactional
+    // public CommunityPostResponse updatePost(Long postId, String content, MultipartFile image, User currentUser) {
+    //     // 게시글 존재 여부 확인
+    //     CommunityPost post = postRepository.findById(postId)
+    //             .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+    //     // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+    //     if (currentUser != null) {
+    //         // 게시글 작성자와 현재 사용자가 다른 경우
+    //         Long authorId = post.getUser() != null ? post.getUser().getId() : null;
+    //         Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+    //         if (!Objects.equals(authorId, requesterId)) {
+    //             throw new IllegalArgumentException("게시글 수정 권한이 없습니다.");
+    //         }
+    //     }
+
+    //     // 게시글 내용 수정
+    //     post.setContent(content);
+
+    //     if (image != null && !image.isEmpty()) {
+    //         // 기존 이미지 삭제
+    //         if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+    //             String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
+    //             s3Uploader.delete(imageKey);
+    //         }
+    //         // 새 이미지 업로드
+    //         String imageUrl = s3Uploader.upload(image, "community");
+    //         imageUrl = cloudFrontDomain + "/" + imageUrl;
+    //         post.setImageUrl(imageUrl);
+    //     }
+
+    //     // 수정된 게시글 저장 (더티 체킹으로 자동 업데이트)
+    //     CommunityPost updatedPost = postRepository.save(post);
+        
+    //     // 현재 사용자의 좋아요 여부 확인
+    //     boolean isLiked = postLikeRepository.existsByPostAndUser(updatedPost, currentUser);
+        
+    //     // 수정된 게시글을 DTO로 변환해서 반환
+    //     return CommunityPostResponse.from(updatedPost, isLiked);
+    // }
+    // 게시글 수정 (NCP Storage)
     @Transactional
     public CommunityPostResponse updatePost(Long postId, String content, MultipartFile image, User currentUser) {
         // 게시글 존재 여부 확인
@@ -103,12 +168,10 @@ public class CommunityService {
         if (image != null && !image.isEmpty()) {
             // 기존 이미지 삭제
             if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
-                String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
-                s3Uploader.delete(imageKey);
+                ncpObjectStorageUploader.deleteByCdnUrl(post.getImageUrl());
             }
             // 새 이미지 업로드
-            String imageUrl = s3Uploader.upload(image, "community");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            String imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "community");
             post.setImageUrl(imageUrl);
         }
 
@@ -122,7 +185,32 @@ public class CommunityService {
         return CommunityPostResponse.from(updatedPost, isLiked);
     }
 
-    // 게시글 삭제
+    // // 게시글 삭제 (AWS S3)
+    // @Transactional
+    // public void deletePost(Long postId, User currentUser) {
+    //     CommunityPost post = postRepository.findById(postId)
+    //             .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+    //     // 인증이 구현되지 않은 상태에서는 작성자 검증을 건너뜀
+    //     if (currentUser != null) {
+    //         // 게시글 작성자와 현재 사용자가 다른 경우
+    //         Long authorId = post.getUser() != null ? post.getUser().getId() : null;
+    //         Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
+
+    //         if (!Objects.equals(authorId, requesterId)) {
+    //             throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
+    //         }
+    //     }
+
+    //     // 기존 이미지 삭제
+    //     if(post.getImageUrl() != null && !post.getImageUrl().isEmpty()){
+    //         String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
+    //         s3Uploader.delete(imageKey);
+    //     }
+    //     // 게시글 삭제
+    //     postRepository.delete(post);
+    // }
+    // 게시글 삭제 (NCP Storage)
     @Transactional
     public void deletePost(Long postId, User currentUser) {
         CommunityPost post = postRepository.findById(postId)
@@ -141,8 +229,8 @@ public class CommunityService {
 
         // 기존 이미지 삭제
         if(post.getImageUrl() != null && !post.getImageUrl().isEmpty()){
-            String imageKey = post.getImageUrl().replace(cloudFrontDomain + "/", "");
-            s3Uploader.delete(imageKey);
+            boolean attempted = ncpObjectStorageUploader.deleteByCdnUrl(post.getImageUrl());
+            // if (!attempted) log.info("Unexpected image URL (not endpoint): {}", post.getImageUrl());
         }
         // 게시글 삭제
         postRepository.delete(post);
