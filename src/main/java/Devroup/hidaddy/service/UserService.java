@@ -215,14 +215,16 @@ public class UserService {
             throw new IllegalArgumentException("이미지 파일이 필요합니다.");
         }
 
+        String defaultProfileUrl = "https://" + cdnDomain + "/profile/default_profile.png";
+                
         // 기존 프로필 이미지가 있다면 S3에서 삭제
-        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && !defaultProfileUrl.equals(user.getProfileImageUrl())) {
             ncpObjectStorageUploader.deleteByCdnUrl(user.getProfileImageUrl());
         }
 
         // 새 이미지를 S3에 업로드
         String imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "profile");
-        
+
         // 사용자의 프로필 이미지 URL 업데이트
         user.setProfileImageUrl(imageUrl);
         userRepository.save(user);
