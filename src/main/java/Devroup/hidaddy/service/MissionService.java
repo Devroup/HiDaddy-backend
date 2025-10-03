@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 import Devroup.hidaddy.util.S3Uploader;
+import Devroup.hidaddy.util.NcpObjectStorageUploader;
 import java.util.Optional;
 import java.util.Arrays;
 
@@ -41,6 +42,7 @@ public class MissionService {
     private final BabyGroupRepository babyGroupRepository;
     private final WeeklyContentRepository WeeklyContentRepository;
     private final S3Uploader s3Uploader;
+    private final NcpObjectStorageUploader ncpObjectStorageUploader;
 
     @Value("${cloudfront.domain}")
     private String cloudFrontDomain;
@@ -241,8 +243,9 @@ public class MissionService {
 
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
-            imageUrl = s3Uploader.upload(image, "mission");
-            imageUrl = cloudFrontDomain + "/" + imageUrl;
+            // imageUrl = s3Uploader.upload(image, "mission");
+            // imageUrl = cloudFrontDomain + "/" + imageUrl;
+            imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "mission");
         }
 
         // AI 요청 보내기
@@ -273,8 +276,9 @@ public class MissionService {
 
             // S3에서 기존 이미지 삭제
             if (existingLog.getImageUrl() != null && !existingLog.getImageUrl().isEmpty()) {
-                String imageKey = existingLog.getImageUrl().replace(cloudFrontDomain + "/", "");
-                s3Uploader.delete(imageKey);
+                ncpObjectStorageUploader.deleteByCdnUrl(existingLog.getImageUrl());
+                // String imageKey = existingLog.getImageUrl().replace(cloudFrontDomain + "/", "");
+                // s3Uploader.delete(imageKey);
             }
             // 기존 로그 삭제
             missionLogRepository.delete(existingLog);
