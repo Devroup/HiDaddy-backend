@@ -41,7 +41,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         source: "build/libs/hidaddy.jar, deploy/hidaddy.service"
-        target: /home/ubuntu
+        target: /home/root
 
     - name: Deploy on EC2 (서비스 재시작)
       uses: appleboy/ssh-action@v1.0.3
@@ -50,7 +50,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          sudo mv /home/ubuntu/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
+          sudo mv /home/root/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
           sudo systemctl daemon-reload
           sudo systemctl enable hidaddy
           sudo systemctl restart hidaddy

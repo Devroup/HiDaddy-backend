@@ -3,8 +3,8 @@ Description=Hidaddy Spring Boot
 After=network-online.target
 
 [Service]
-User=ubuntu
-ExecStart=/usr/bin/java -jar /home/ubuntu/hidaddy.jar --spring.profiles.active=prod
+User=root
+ExecStart=/usr/bin/java -jar /home/root/hidaddy.jar --spring.profiles.active=prod
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=5
