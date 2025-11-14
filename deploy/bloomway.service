@@ -4,6 +4,7 @@ After=network-online.target
 
 [Service]
 User=ubuntu
+WorkingDirectory=/home/ubuntu
 ExecStart=/usr/bin/java -jar /home/ubuntu/hidaddy.jar --spring.profiles.active=prod
 SuccessExitStatus=143
 Restart=on-failure
