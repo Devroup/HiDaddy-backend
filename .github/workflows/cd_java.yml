@@ -41,7 +41,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
-        source: "build/libs/hidaddy.jar,deploy/hidaddy.service"
+        source: "build/libs/hidaddy.jar, deploy/hidaddy.service"
         target: "/root"
         strip_components: 0
 
@@ -67,7 +67,8 @@ jobs:
           # JAR를 /root 하위로 고정(필요 시 소유권 조정)
           ls -al /root/build/libs/hidaddy.jar
     
-          systemctl daemon-reload
-          systemctl enable hidaddy
-          systemctl restart hidaddy
-          systemctl status hidaddy --no-pager
+          # 시스템 재시작
+          sudo systemctl daemon-reload
+          sudo systemctl enable hidaddy
+          sudo systemctl restart hidaddy
+          sudo systemctl status hidaddy --no-pager
