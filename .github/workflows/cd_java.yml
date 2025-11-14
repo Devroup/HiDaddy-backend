@@ -1,11 +1,11 @@
-name: Java CD (Gradle + Spring Boot) 
+name: Java CD (Gradle + Spring Boot)
 
 on:
   push:
-    branches: [ main ] 
+    branches: [ main ]
 
 jobs:
-  build-and-deploy: 
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,28 +29,45 @@ jobs:
     - name: Build JAR with Gradle (exclude test)
       run: ./gradlew clean bootJar -x test
 
-    - name: Fix jar name
+    - name: Fix jar name (hidaddy.jar로 고정)
       run: |
         JAR=$(ls build/libs/*.jar | head -n1)
         mv "$JAR" build/libs/hidaddy.jar
+        ls -al build/libs
 
-    - name: Upload JAR and Service File to EC2
+    - name: Upload JAR and Service File to server (root)
       uses: appleboy/scp-action@v0.1.6
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         source: "build/libs/hidaddy.jar, deploy/hidaddy.service"
-        target: /home/root
+        target: "/root"
+        strip_components: 0
 
-    - name: Deploy on EC2 (서비스 재시작)
+    - name: Deploy on server (systemd, root)
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          sudo mv /home/root/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
+          # SSH 연결 테스트
+          echo "SSH connection successful"
+          
+          # JDK 17 보장 (이미 설치되어 있으면 건너뜀)
+          if ! command -v java >/dev/null 2>&1; then
+            apt-get update -y && apt-get install -y openjdk-17-jre
+          fi
+
+          # 서비스 파일 배치
+          mv -f /root/deploy/hidaddy.service /etc/systemd/system/hidaddy.service
+          ls -al /etc/systemd/system/hidaddy.service
+
+          # JAR를 /root 하위로 고정(필요 시 소유권 조정)
+          ls -al /root/build/libs/hidaddy.jar
+    
+          # 시스템 재시작
           sudo systemctl daemon-reload
           sudo systemctl enable hidaddy
           sudo systemctl restart hidaddy

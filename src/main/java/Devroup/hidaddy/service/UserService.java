@@ -6,6 +6,7 @@ import Devroup.hidaddy.repository.user.*;
 import Devroup.hidaddy.repository.auth.*;
 import Devroup.hidaddy.jwt.JwtUtil;
 import Devroup.hidaddy.util.S3Uploader;
+import Devroup.hidaddy.util.NcpObjectStorageUploader;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +27,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    @Value("${ncp.object-storage.cdn-domain}") private String cdnDomain;     
 
     private final UserRepository userRepository;
     private final BabyRepository babyRepository;
     private final S3Uploader s3Uploader;
+    private final NcpObjectStorageUploader ncpObjectStorageUploader;
     private final BabyCommentRepository babyCommentRepository;
     private final BabyGroupRepository babyGroupRepository;
     @Value("${cloudfront.domain}")
@@ -95,6 +98,7 @@ public class UserService {
                     newUser.setEmail(email);
                     newUser.setName(name);
                     newUser.setPhone(phone);
+                    newUser.setProfileImageUrl("https://"+cdnDomain+"/profile/default_profile.png");
                     newUser.setPartnerPhone(partnerPhone);
                     newUser.setLoginType(loginType);
                     newUser.setSocialId(socialId);
@@ -211,15 +215,15 @@ public class UserService {
             throw new IllegalArgumentException("이미지 파일이 필요합니다.");
         }
 
+        String defaultProfileUrl = "https://" + cdnDomain + "/profile/default_profile.png";
+                
         // 기존 프로필 이미지가 있다면 S3에서 삭제
-        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
-            String imageKey = user.getProfileImageUrl().replace(cloudFrontDomain + "/", "");
-            s3Uploader.delete(imageKey);
+        if (user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && !defaultProfileUrl.equals(user.getProfileImageUrl())) {
+            ncpObjectStorageUploader.deleteByCdnUrl(user.getProfileImageUrl());
         }
 
         // 새 이미지를 S3에 업로드
-        String imageUrl = s3Uploader.upload(image, "profile");
-        imageUrl = cloudFrontDomain + "/" + imageUrl;
+        String imageUrl = ncpObjectStorageUploader.uploadMultipart(image, "profile");
 
         // 사용자의 프로필 이미지 URL 업데이트
         user.setProfileImageUrl(imageUrl);
