@@ -34,9 +34,15 @@ public class ReportService {
             throw new BadRequestException("자신의 게시글은 신고할 수 없습니다.");
         }
 
-        // 중복 신고 방지
+        // 중복 신고 체크
         if (reportRepository.existsByReporterAndReportTypeAndTargetId(reporter, ReportType.POST, postId)) {
-            throw new BadRequestException("이미 신고한 게시글입니다.");
+            // 이미 신고한 경우, 에러가 아닌 정상 응답 반환 (UI 구분용)
+            long totalReportCount = reportRepository.countByReportTypeAndTargetId(ReportType.POST, postId);
+            return ReportResponse.builder()
+                    .reportId(null)
+                    .message("이미 신고한 게시글입니다.")
+                    .totalReportCount(totalReportCount)
+                    .build();
         }
 
         // 신고 저장
@@ -76,9 +82,15 @@ public class ReportService {
             throw new BadRequestException("자신의 댓글은 신고할 수 없습니다.");
         }
 
-        // 중복 신고 방지
+        // 중복 신고 체크
         if (reportRepository.existsByReporterAndReportTypeAndTargetId(reporter, ReportType.COMMENT, commentId)) {
-            throw new BadRequestException("이미 신고한 댓글입니다.");
+            // 이미 신고한 경우, 에러가 아닌 정상 응답 반환 (UI 구분용)
+            long totalReportCount = reportRepository.countByReportTypeAndTargetId(ReportType.COMMENT, commentId);
+            return ReportResponse.builder()
+                    .reportId(null)
+                    .message("이미 신고한 댓글입니다.")
+                    .totalReportCount(totalReportCount)
+                    .build();
         }
 
         // 신고 저장
