@@ -3,7 +3,8 @@ package Devroup.hidaddy.controller;
 import Devroup.hidaddy.dto.community.*;
 import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.security.UserDetailsImpl;
-import Devroup.hidaddy.service.community.CommunityService;   
+import Devroup.hidaddy.service.community.CommunityService;
+import Devroup.hidaddy.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Community", description = "커뮤니티 게시글 및 댓글 API")
 public class CommunityController {
     private final CommunityService communityService;
+    private final ReportService reportService;
 
     @Operation(summary = "게시글 목록 조회", description = "페이징 처리된 게시글 목록을 내림차순으로 조회합니다.")
     @GetMapping
@@ -182,5 +184,30 @@ public class CommunityController {
         }
         communityService.toggleCommentLike(commentId, userDetails.getUser());
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "게시글 신고", description = "부적절한 게시글을 신고합니다.")
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<ReportResponse> reportPost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(reportService.reportPost(postId, userDetails.getUser()));
+    }
+
+    @Operation(summary = "댓글 신고", description = "부적절한 댓글을 신고합니다.")
+    @PostMapping("/{postId}/comments/{commentId}/report")
+    public ResponseEntity<ReportResponse> reportComment(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(reportService.reportComment(postId, commentId, userDetails.getUser()));
     }
 } 
