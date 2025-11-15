@@ -2,6 +2,7 @@ package Devroup.hidaddy.service;
 
 import Devroup.hidaddy.dto.user.*;
 import Devroup.hidaddy.entity.*;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import Devroup.hidaddy.repository.user.*;
 import Devroup.hidaddy.repository.auth.*;
 import Devroup.hidaddy.jwt.JwtUtil;
@@ -46,7 +47,7 @@ public class UserService {
         boolean isUserGroup = babyGroup.getBabies().stream()
                 .anyMatch(b -> b.getUser().getId().equals(user.getId()));
         if (!isUserGroup) {
-            throw new IllegalArgumentException("선택한 아기 그룹에 대한 권한이 없습니다.");
+            throw new BadRequestException("선택한 아기 그룹에 대한 권한이 없습니다.");
         }
 
         // 선택된 아기 그룹으로 업데이트
@@ -77,7 +78,7 @@ public class UserService {
 
     public void changeUserName(User user, String userName) {
         if (userName == null || userName.trim().isEmpty()) {
-            throw new IllegalArgumentException("이름은 비워둘 수 없습니다.");
+            throw new BadRequestException("이름은 비워둘 수 없습니다.");
         }
         user.setName(userName);
         userRepository.save(user);
@@ -163,7 +164,7 @@ public class UserService {
     public SelectedBabyResponse getSelectedBabyInfo(User currentUser) {
         Long selectedGroupId = currentUser.getSelectedBabyId();
         if (selectedGroupId == null) {
-            throw new IllegalArgumentException("선택된 아기 그룹이 없습니다.");
+            throw new BadRequestException("선택된 아기 그룹이 없습니다.");
         }
 
         // 그룹 ID로 BabyGroup 조회
@@ -174,7 +175,7 @@ public class UserService {
         boolean isUserGroup = group.getBabies().stream()
                 .anyMatch(b -> b.getUser().getId().equals(currentUser.getId()));
         if (!isUserGroup) {
-            throw new IllegalArgumentException("선택된 아기 그룹에 대한 권한이 없습니다.");
+            throw new BadRequestException("선택된 아기 그룹에 대한 권한이 없습니다.");
         }
 
         List<Baby> babies = group.getBabies();
@@ -212,7 +213,7 @@ public class UserService {
     @Transactional
     public String uploadProfileImage(User user, MultipartFile image) {
         if (image == null || image.isEmpty()) {
-            throw new IllegalArgumentException("이미지 파일이 필요합니다.");
+            throw new BadRequestException("이미지 파일이 필요합니다.");
         }
 
         String defaultProfileUrl = "https://" + cdnDomain + "/profile/default_profile.png";

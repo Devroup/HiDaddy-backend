@@ -7,6 +7,7 @@ import Devroup.hidaddy.dto.user.BabyGroupResponse;
 import Devroup.hidaddy.entity.Baby;
 import Devroup.hidaddy.entity.BabyGroup;
 import Devroup.hidaddy.entity.User;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import Devroup.hidaddy.repository.user.BabyGroupRepository;
 import Devroup.hidaddy.repository.user.BabyRepository;
 import Devroup.hidaddy.repository.user.UserRepository;
@@ -37,7 +38,7 @@ public class BabyService {
     public List<BabyResponse> registerBabyGroupTutorial(BabyRegisterListRequest request, User user) {
         List<BabyRegisterRequest> babies = request.getBabies();
         if (babies == null || babies.isEmpty()) {
-            throw new IllegalArgumentException("최소 한 명 이상의 아기 정보가 필요합니다.");
+            throw new BadRequestException("최소 한 명 이상의 아기 정보가 필요합니다.");
         }
 
         user.setName(request.getUserName());
@@ -70,7 +71,7 @@ public class BabyService {
     // 아기 그룹 등록 (1명 or 2명 모두 이 메서드 사용)
     public List<BabyResponse> registerBabyGroup(List<BabyRegisterRequest> babies, User user) {
         if (babies == null || babies.isEmpty()) {
-            throw new IllegalArgumentException("최소 한 명 이상의 아기 정보가 필요합니다.");
+            throw new BadRequestException("최소 한 명 이상의 아기 정보가 필요합니다.");
         }
 
         BabyGroup babyGroup = new BabyGroup();

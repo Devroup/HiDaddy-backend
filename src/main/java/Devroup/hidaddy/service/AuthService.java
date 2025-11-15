@@ -1,6 +1,7 @@
 package Devroup.hidaddy.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,7 +72,7 @@ public class AuthService {
                 params.add("redirect_uri", naverRedirectUri);
                 params.add("state", "random");
             }
-            default -> throw new IllegalArgumentException("Unsupported provider: " + provider);
+            default -> throw new BadRequestException("Unsupported provider: " + provider);
         }
 
         HttpHeaders headers = new HttpHeaders();

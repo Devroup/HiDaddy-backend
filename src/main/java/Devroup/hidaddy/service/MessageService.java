@@ -3,6 +3,7 @@ package Devroup.hidaddy.service;
 import Devroup.hidaddy.dto.message.MessageResponse;
 
 import Devroup.hidaddy.entity.User;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
@@ -26,7 +27,7 @@ public class MessageService {
 
         // 배우자 번호가 null이거나 비어있는지 먼저 체크
         if (user.getPartnerPhone() == null || user.getPartnerPhone().trim().isEmpty()) {
-            throw new IllegalArgumentException("배우자 번호가 등록되지 않았습니다.");
+            throw new BadRequestException("배우자 번호가 등록되지 않았습니다.");
         }
 
         // 1) to 값에서 하이픈 제거
