@@ -24,12 +24,13 @@ public class MessageService {
     public MessageResponse sendSmsToPartner(User user, String text) {
         DefaultMessageService messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, domain);
 
-        // 1) to 값에서 하이픈 제거\
-        String partnerPhone = user.getPartnerPhone().replaceAll("-", "").trim();
-
-        if (partnerPhone == null || partnerPhone.trim().isEmpty()) {
+        // 배우자 번호가 null이거나 비어있는지 먼저 체크
+        if (user.getPartnerPhone() == null || user.getPartnerPhone().trim().isEmpty()) {
             throw new IllegalArgumentException("배우자 번호가 등록되지 않았습니다.");
         }
+
+        // 1) to 값에서 하이픈 제거
+        String partnerPhone = user.getPartnerPhone().replaceAll("-", "").trim();
 
         Message msg = new Message();
         msg.setFrom(from);
