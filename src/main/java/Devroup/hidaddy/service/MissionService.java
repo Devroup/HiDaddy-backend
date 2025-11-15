@@ -7,10 +7,11 @@ import Devroup.hidaddy.entity.User;
 import Devroup.hidaddy.entity.Baby;
 import Devroup.hidaddy.entity.BabyGroup;
 import Devroup.hidaddy.entity.WeeklyContent;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import Devroup.hidaddy.repository.mission.MissionLogRepository;
 import Devroup.hidaddy.repository.mission.MissionRepository;
 import Devroup.hidaddy.repository.emotionDiary.EmotionDiaryRepository;
-import Devroup.hidaddy.repository.user.BabyRepository;  
+import Devroup.hidaddy.repository.user.BabyRepository;
 import Devroup.hidaddy.repository.user.BabyGroupRepository;
 import Devroup.hidaddy.repository.weeklycontent.WeeklyContentRepository;
 import org.springframework.web.client.RestTemplate;
@@ -141,7 +142,7 @@ public class MissionService {
     public MissionKeywordResponse createTodayMission(User currentUser) {
         Long selectedGroupId = currentUser.getSelectedBabyId();
         if (selectedGroupId == null) {
-            throw new IllegalArgumentException("선택된 아기 그룹이 없습니다.");
+            throw new BadRequestException("선택된 아기 그룹이 없습니다.");
         }
 
         // 그룹 ID로 BabyGroup 조회
@@ -152,7 +153,7 @@ public class MissionService {
         boolean isUserGroup = group.getBabies().stream()
                 .anyMatch(b -> b.getUser().getId().equals(currentUser.getId()));
         if (!isUserGroup) {
-            throw new IllegalArgumentException("선택된 아기 그룹에 대한 권한이 없습니다.");
+            throw new BadRequestException("선택된 아기 그룹에 대한 권한이 없습니다.");
         }
 
         // Double-check: AI 호출 전에 한번 더 확인

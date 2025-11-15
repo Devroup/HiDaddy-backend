@@ -2,6 +2,7 @@ package Devroup.hidaddy.service.community;
 
 import Devroup.hidaddy.dto.community.*;
 import Devroup.hidaddy.entity.*;
+import Devroup.hidaddy.global.exeption.BadRequestException;
 import Devroup.hidaddy.repository.community.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -158,7 +159,7 @@ public class CommunityService {
             Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
 
             if (!Objects.equals(authorId, requesterId)) {
-                throw new IllegalArgumentException("게시글 수정 권한이 없습니다.");
+                throw new BadRequestException("게시글 수정 권한이 없습니다.");
             }
         }
 
@@ -223,7 +224,7 @@ public class CommunityService {
             Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
 
             if (!Objects.equals(authorId, requesterId)) {
-                throw new IllegalArgumentException("게시글 삭제 권한이 없습니다.");
+                throw new BadRequestException("게시글 삭제 권한이 없습니다.");
             }
         }
 
@@ -293,7 +294,7 @@ public class CommunityService {
             Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
 
             if (!Objects.equals(authorId, requesterId)) {
-                throw new IllegalArgumentException("댓글 수정 권한이 없습니다.");
+                throw new BadRequestException("댓글 수정 권한이 없습니다.");
             }
         }
 
@@ -324,7 +325,7 @@ public class CommunityService {
             Long requesterId = currentUser.getId(); // SecurityContext에서 꺼낸 User라면 적절히 id 추출
 
             if (!Objects.equals(authorId, requesterId)) {
-                throw new IllegalArgumentException("댓글 삭제 권한이 없습니다.");
+                throw new BadRequestException("댓글 삭제 권한이 없습니다.");
             }
         }
 
